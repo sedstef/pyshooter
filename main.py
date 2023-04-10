@@ -101,11 +101,6 @@ PINK = (235, 65, 54)
 font = pygame.font.SysFont('Futura', 30)
 
 
-def draw_text(text, font, text_col, x, y):
-    img = font.render(text, True, text_col)
-    screen.blit(img, (x, y))
-
-
 def draw_bg(screen: pygame.Surface):
     screen.fill(BG)
     width = sky_img.get_width()
@@ -442,27 +437,9 @@ class World:
     def add_explosion(self, explosion):
         self._explosion_group.add(explosion)
 
-    def draw(self, screen: pygame.Surface):
-        for tile in self.platform:
-            tile.rect[0] += view.screen_scroll
-            screen.blit(tile.image, tile.rect)
-
-        # show player health
-        self.health_bar.draw(screen)
-
-        # show ammo
-        draw_text('AMMO: ', font, WHITE, 10, 35)
-        for x in range(self.player.ammo):
-            screen.blit(bullet_img, (90 + (x * 10), 40))
-        # show grenades
-        draw_text('GRENADES: ', font, WHITE, 10, 60)
-        for x in range(self.player.grenades):
-            screen.blit(grenade_img, (135 + (x * 15), 60))
-
-        self.player.update(view)
-        self.player.draw(screen)
-
     def update(self, view: View):
+        self.player.update(view)
+
         self._bullet_group.update(view)
         self._grenade_group.update(view)
         self._explosion_group.update(view)
@@ -472,14 +449,24 @@ class World:
         self._water_group.update(view)
         self._exit_group.update(view)
 
-    def draw2(self, screen: pygame.Surface):
-        self._bullet_group.draw(screen)
-        self._grenade_group.draw(screen)
-        self._explosion_group.draw(screen)
+    def draw(self, screen: pygame.Surface):
+        for tile in self._platform:
+            tile.rect[0] += view.screen_scroll
+            screen.blit(tile.image, tile.rect)
+
         self._item_box_group.draw(screen)
         self._decoration_group.draw(screen)
         self._water_group.draw(screen)
         self._exit_group.draw(screen)
+
+        self._player.draw(screen)
+
+        self._bullet_group.draw(screen)
+        self._grenade_group.draw(screen)
+        self._explosion_group.draw(screen)
+
+        # show player health
+        self.health_bar.draw(screen)
 
 
 class ItemBox(pygame.sprite.Sprite):
@@ -520,6 +507,20 @@ class HealthBar:
         pygame.draw.rect(screen, BLACK, (self.x - 2, self.y - 2, 154, 24))
         pygame.draw.rect(screen, RED, (self.x, self.y, 150, 20))
         pygame.draw.rect(screen, GREEN, (self.x, self.y, 150 * ratio, 20))
+
+        # show ammo
+        self.draw_text(screen, 'AMMO: ', font, WHITE, 10, 35)
+        for x in range(self.player.ammo):
+            screen.blit(bullet_img, (90 + (x * 10), 40))
+
+        # show grenades
+        self.draw_text(screen, 'GRENADES: ', font, WHITE, 10, 60)
+        for x in range(self.player.grenades):
+            screen.blit(grenade_img, (135 + (x * 15), 60))
+
+    def draw_text(self, screen: pygame.Surface, text, font, text_col, x, y):
+        txt_img = font.render(text, True, text_col)
+        screen.blit(txt_img, (x, y))
 
 
 class Bullet(pygame.sprite.Sprite):
@@ -639,8 +640,6 @@ while run:
     else:
         # update background
         draw_bg(screen)
-        # draw world map
-        world.draw(screen)
 
         for enemy in world.enemy_group:
             enemy.update(view)
@@ -648,7 +647,8 @@ while run:
 
         world.update(view)
 
-        world.draw2(screen)
+        # draw world map
+        world.draw(screen)
 
         # show intro
         if start_intro is True:
