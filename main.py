@@ -374,7 +374,7 @@ class World():
 						decoration_group.add(decoration)
 					elif tile == 15:#create player
 						player = Soldier('player', x * TILE_SIZE, y * TILE_SIZE, 1.65, 5, 20, 5)
-						health_bar = HealthBar(10, 10, player.health, player.health)
+						self._health_bar = HealthBar(10, 10, player.health, player.health)
 					elif tile == 16:#create enemies
 						enemy = Soldier('enemy', x * TILE_SIZE, y * TILE_SIZE, 1.65, 2, 20, 0)
 						enemy_group.add(enemy)
@@ -391,8 +391,11 @@ class World():
 						exit = Exit(img, x * TILE_SIZE, y * TILE_SIZE)
 						exit_group.add(exit)
 
-		return player, health_bar
+		return player
 
+	@property
+	def health_bar(self):
+		return self._health_bar
 
 	def draw(self):
 		for tile in self.obstacle_list:
@@ -663,7 +666,7 @@ def load_world_data(level: int):
 
 
 world = World()
-player, health_bar = world.process_data(load_world_data(level))
+player = world.process_data(load_world_data(level))
 
 
 
@@ -687,7 +690,7 @@ while run:
 		#draw world map
 		world.draw()
 		#show player health
-		health_bar.draw(player.health)
+		world.health_bar.draw(player.health)
 		#show ammo
 		draw_text('AMMO: ', font, WHITE, 10, 35)
 		for x in range(player.ammo):
@@ -759,7 +762,7 @@ while run:
 				if level <= MAX_LEVELS:
 
 					world = World()
-					player, health_bar = world.process_data(load_world_data(level))
+					player = world.process_data(load_world_data(level))
 		else:
 			screen_scroll = 0
 			if death_fade.fade():
@@ -769,7 +772,7 @@ while run:
 					bg_scroll = 0
 					reset_level()
 					world = World()
-					player, health_bar = world.process_data(load_world_data(level))
+					player = world.process_data(load_world_data(level))
 
 
 	for event in pygame.event.get():
