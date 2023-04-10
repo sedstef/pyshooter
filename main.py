@@ -6,6 +6,7 @@ import pygame
 from pygame import mixer
 from pygame.sprite import Group
 from pygame.sprite import spritecollide
+from pygame.sprite import collide_rect
 
 import button
 from engine.background import Background
@@ -42,7 +43,6 @@ MAX_LEVELS = 3
 
 level = 1
 start_game = False
-start_intro = False
 
 # define player action variables
 moving_left = False
@@ -473,7 +473,7 @@ class ItemBox(pygame.sprite.Sprite):
         # scroll
         self.rect.x += view.screen_scroll
         # check if the player has picked up the box
-        if pygame.sprite.collide_rect(self, world.player):
+        if collide_rect(self, world.player):
             # check what kind of box it was
             if self.item_type == 'Health':
                 world.player.health += 25
@@ -605,7 +605,9 @@ class Grenade(pygame.sprite.Sprite):
 
 
 # create screen fades
-intro_fade = ScreenFade(1, BLACK, 4)
+def create_intro_fade():
+    return ScreenFade(1, BLACK, 4)
+
 death_fade = ScreenFade(2, PINK, 4)
 
 # create buttons
@@ -627,7 +629,7 @@ while run:
         # add buttons
         if start_button.draw(screen):
             start_game = True
-            start_intro = True
+            intro_fade = create_intro_fade()
         if exit_button.draw(screen):
             run = False
     else:
@@ -644,10 +646,9 @@ while run:
         world.draw(screen)
 
         # show intro
-        if start_intro is True:
+        if intro_fade is not None:
             if intro_fade.fade(screen):
-                start_intro = False
-                intro_fade.fade_counter = 0
+                intro_fade = None
 
         # update player actions
         if world.player.alive:
@@ -659,9 +660,10 @@ while run:
                 world.player.update_action(Action.IDLE)
             world.player.move(view, moving_left, moving_right)
             view.bg_scroll -= view.screen_scroll
+
             # check if player has completed the level
             if world.player.level_complete:
-                start_intro = True
+                intro_fade = create_intro_fade()
                 level += 1
                 view.bg_scroll = 0
                 if level <= MAX_LEVELS:
@@ -671,7 +673,7 @@ while run:
             if death_fade.fade(screen):
                 if restart_button.draw(screen):
                     death_fade.fade_counter = 0
-                    start_intro = True
+                    intro_fade = create_intro_fade()
                     view.bg_scroll = 0
                     world = World.load_world(level)
 
