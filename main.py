@@ -122,7 +122,6 @@ def reset_level():
 class Soldier(pygame.sprite.Sprite):
     def __init__(self, char_type, x, y, scale, speed, ammo, grenades):
         pygame.sprite.Sprite.__init__(self)
-        self.alive = True
         self.char_type = char_type
         self.speed = speed
         self.ammo = ammo
@@ -276,8 +275,11 @@ class Soldier(pygame.sprite.Sprite):
         if self.health <= 0:
             self.health = 0
             self.speed = 0
-            self.alive = False
             self.update_action(3)
+
+    @property
+    def alive(self) -> bool:
+        return self.health > 0
 
     def draw(self):
         screen.blit(pygame.transform.flip(self.image, self.flip, False), self.rect)
@@ -492,7 +494,7 @@ class ItemBox(pygame.sprite.Sprite):
             self.kill()
 
 
-class HealthBar():
+class HealthBar:
     def __init__(self, x, y, health, max_health):
         self.x = x
         self.y = y
