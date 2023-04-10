@@ -332,6 +332,11 @@ class Player(Soldier):
 
         return scroll
 
+    def create_grenade(self):
+        # reduce grenades
+        self.grenades -= 1
+
+        return Grenade(self.rect.centerx + (0.5 * self.rect.size[0] * self.direction), self.rect.top, self.direction)
 
 class World:
 
@@ -661,13 +666,9 @@ while run:
             if shoot:
                 world.player.shoot()
             # throw grenades
-            elif grenade and grenade_thrown == False and world.player.grenades > 0:
-                grenade = Grenade(
-                    world.player.rect.centerx + (0.5 * world.player.rect.size[0] * world.player.direction), \
-                    world.player.rect.top, world.player.direction)
-                grenade_group.add(grenade)
-                # reduce grenades
-                world.player.grenades -= 1
+            elif grenade and grenade_thrown is False and world.player.grenades > 0:
+                new_grenade = world.player.create_grenade()
+                grenade_group.add(new_grenade)
                 grenade_thrown = True
             if world.player.in_air:
                 world.player.update_action(Action.JUMP)
