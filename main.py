@@ -4,6 +4,8 @@ import string
 
 import pygame
 from pygame import mixer
+from pygame.sprite import Group
+from pygame.sprite import  spritecollide
 
 import button
 from engine.animations import Action
@@ -190,7 +192,7 @@ class Soldier(pygame.sprite.Sprite):
                     dy = tile.rect.top - self.rect.bottom
 
         # check for collision with water
-        if pygame.sprite.spritecollide(self, world.water_group, False):
+        if spritecollide(self, world.water_group, False):
             self.health = 0
 
         # check if fallen off the map
@@ -210,7 +212,7 @@ class Soldier(pygame.sprite.Sprite):
     @property
     def level_complete(self):
         # check for collision with exit
-        return pygame.sprite.spritecollide(self, world.exit_group, False)
+        return spritecollide(self, world.exit_group, False)
 
     def collision_x(self):
         pass
@@ -350,16 +352,16 @@ class World:
     def __init__(self):
         self._player = None
         self._health_bar = None
-        self._platform = pygame.sprite.Group()
-        self._decoration_group = pygame.sprite.Group()
-        self._water_group = pygame.sprite.Group()
-        self._exit_group = pygame.sprite.Group()
-        self._item_box_group = pygame.sprite.Group()
-        self._enemy_group = pygame.sprite.Group()
+        self._platform = Group()
+        self._decoration_group = Group()
+        self._water_group = Group()
+        self._exit_group = Group()
+        self._item_box_group = Group()
+        self._enemy_group = Group()
         # dynamic stuff
-        self._bullet_group = pygame.sprite.Group()
-        self._grenade_group = pygame.sprite.Group()
-        self._explosion_group = pygame.sprite.Group()
+        self._bullet_group = Group()
+        self._grenade_group = Group()
+        self._explosion_group = Group()
 
     def process_data(self, data):
         self.level_length = len(data[0])
@@ -393,31 +395,31 @@ class World:
                         self._exit_group.add(Tile(img, img_rect))
 
     @property
-    def platform(self):
+    def platform(self) -> Group:
         return self._platform
 
     @property
-    def decoration_group(self):
+    def decoration_group(self) -> Group:
         return self._decoration_group
 
     @property
-    def water_group(self):
+    def water_group(self) -> Group:
         return self._water_group
 
     @property
-    def exit_group(self):
+    def exit_group(self) -> Group:
         return self._exit_group
 
     @property
-    def item_box_group(self):
+    def item_box_group(self) -> Group:
         return self._item_box_group
 
     @property
-    def enemy_group(self):
+    def enemy_group(self) -> Group:
         return self._enemy_group
 
     @property
-    def bullet_group(self):
+    def bullet_group(self) -> Group:
         return self._bullet_group
 
     @property
@@ -541,16 +543,16 @@ class Bullet(pygame.sprite.Sprite):
             self.kill()
 
         # check for collision with level
-        if pygame.sprite.spritecollide(self, world.platform, False):
+        if spritecollide(self, world.platform, False):
             self.kill()
 
         # check collision with characters
-        if pygame.sprite.spritecollide(world.player, world.bullet_group, False):
+        if spritecollide(world.player, world.bullet_group, False):
             if world.player.alive:
                 world.player.health -= 5
                 self.kill()
         for enemy in world.enemy_group:
-            if pygame.sprite.spritecollide(enemy, world.bullet_group, False):
+            if spritecollide(enemy, world.bullet_group, False):
                 if enemy.alive:
                     enemy.health -= 25
                     self.kill()
