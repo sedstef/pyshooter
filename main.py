@@ -125,7 +125,7 @@ def reset_level():
     explosion_group.empty()
     item_box_group.empty()
     decoration_group.empty()
-    water_group.empty()
+    world.water_group.empty()
     exit_group.empty()
 
 
@@ -207,7 +207,7 @@ class Soldier(pygame.sprite.Sprite):
                     dy = tile.rect.top - self.rect.bottom
 
         # check for collision with water
-        if pygame.sprite.spritecollide(self, water_group, False):
+        if pygame.sprite.spritecollide(self, world.water_group, False):
             self.health = 0
 
         # check if fallen off the map
@@ -368,6 +368,7 @@ class World:
         self._player = None
         self._health_bar = None
         self._platform = pygame.sprite.Group()
+        self._water_group = pygame.sprite.Group()
 
     def process_data(self, data):
         self.level_length = len(data[0])
@@ -383,7 +384,7 @@ class World:
                     if tile >= 0 and tile <= 8:
                         self._platform.add(Tile(img,img_rect))
                     elif tile >= 9 and tile <= 10:
-                        water_group.add(Tile(img, img_rect))
+                        self._water_group.add(Tile(img, img_rect))
                     elif tile >= 11 and tile <= 14:
                         decoration_group.add(Tile(img, img_rect))
                     elif tile == 15:  # create player
@@ -406,6 +407,10 @@ class World:
     @property
     def platform(self):
         return self._platform
+
+    @property
+    def water_group(self):
+        return self._water_group
 
     @property
     def health_bar(self):
@@ -580,7 +585,6 @@ grenade_group = pygame.sprite.Group()
 explosion_group = pygame.sprite.Group()
 item_box_group = pygame.sprite.Group()
 decoration_group = pygame.sprite.Group()
-water_group = pygame.sprite.Group()
 exit_group = pygame.sprite.Group()
 
 world = World.load_world(level)
@@ -615,7 +619,7 @@ while run:
         explosion_group.update(view)
         item_box_group.update(view)
         decoration_group.update(view)
-        water_group.update(view)
+        world.water_group.update(view)
         exit_group.update(view)
 
         bullet_group.draw(screen)
@@ -623,7 +627,7 @@ while run:
         explosion_group.draw(screen)
         item_box_group.draw(screen)
         decoration_group.draw(screen)
-        water_group.draw(screen)
+        world.water_group.draw(screen)
         exit_group.draw(screen)
 
         # show intro
