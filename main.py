@@ -11,6 +11,7 @@ from engine.animations import ActionAnimation
 from engine.explosion import Explosion
 from engine.screenfade import ScreenFade
 from engine.view import View
+from engine.tile import Tile
 
 mixer.init()
 pygame.init()
@@ -382,28 +383,25 @@ class World:
                     if tile >= 0 and tile <= 8:
                         self.obstacle_list.append(tile_data)
                     elif tile >= 9 and tile <= 10:
-                        water = Water(img, x * TILE_SIZE, y * TILE_SIZE)
-                        water_group.add(water)
+                        water_group.add(Tile(img, img_rect))
                     elif tile >= 11 and tile <= 14:
-                        decoration = Decoration(img, x * TILE_SIZE, y * TILE_SIZE)
-                        decoration_group.add(decoration)
+                        decoration_group.add(Tile(img, img_rect))
                     elif tile == 15:  # create player
                         self._player = Player(x * TILE_SIZE, y * TILE_SIZE, 1.65, 5, 20, 5)
                         self._health_bar = HealthBar(10, 10, self.player)
                     elif tile == 16:  # create enemies
                         enemy_group.add(Enemy(x * TILE_SIZE, y * TILE_SIZE, 1.65, 2, 20))
                     elif tile == 17:  # create ammo box
-                        item_box = ItemBox('Ammo', x * TILE_SIZE, y * TILE_SIZE)
+                        item_box = ItemBox(img, img_rect, 'Ammo')
                         item_box_group.add(item_box)
                     elif tile == 18:  # create grenade box
-                        item_box = ItemBox('Grenade', x * TILE_SIZE, y * TILE_SIZE)
+                        item_box = ItemBox(img, img_rect, 'Grenade')
                         item_box_group.add(item_box)
                     elif tile == 19:  # create health box
-                        item_box = ItemBox('Health', x * TILE_SIZE, y * TILE_SIZE)
+                        item_box = ItemBox(img, img_rect, 'Health')
                         item_box_group.add(item_box)
                     elif tile == 20:  # create exit
-                        exit = Exit(img, x * TILE_SIZE, y * TILE_SIZE)
-                        exit_group.add(exit)
+                        exit_group.add(Tile(img, img_rect))
 
     @property
     def health_bar(self):
@@ -434,46 +432,12 @@ class World:
         self.player.draw(screen)
 
 
-class Decoration(pygame.sprite.Sprite):
-    def __init__(self, img, x, y):
-        pygame.sprite.Sprite.__init__(self)
-        self.image = img
-        self.rect = self.image.get_rect()
-        self.rect.midtop = (x + TILE_SIZE // 2, y + (TILE_SIZE - self.image.get_height()))
-
-    def update(self, view: View):
-        self.rect.x += view.screen_scroll
-
-
-class Water(pygame.sprite.Sprite):
-    def __init__(self, img, x, y):
-        pygame.sprite.Sprite.__init__(self)
-        self.image = img
-        self.rect = self.image.get_rect()
-        self.rect.midtop = (x + TILE_SIZE // 2, y + (TILE_SIZE - self.image.get_height()))
-
-    def update(self, view: View):
-        self.rect.x += view.screen_scroll
-
-
-class Exit(pygame.sprite.Sprite):
-    def __init__(self, img, x, y):
-        pygame.sprite.Sprite.__init__(self)
-        self.image = img
-        self.rect = self.image.get_rect()
-        self.rect.midtop = (x + TILE_SIZE // 2, y + (TILE_SIZE - self.image.get_height()))
-
-    def update(self, view: View):
-        self.rect.x += view.screen_scroll
-
-
 class ItemBox(pygame.sprite.Sprite):
-    def __init__(self, item_type, x, y):
+    def __init__(self, img, img_rect, item_type):
         pygame.sprite.Sprite.__init__(self)
+        self.image = img
+        self.rect = img_rect
         self.item_type = item_type
-        self.image = item_boxes[self.item_type]
-        self.rect = self.image.get_rect()
-        self.rect.midtop = (x + TILE_SIZE // 2, y + (TILE_SIZE - self.image.get_height()))
 
     def update(self, view: View):
         # scroll
