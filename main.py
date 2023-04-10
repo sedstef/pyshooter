@@ -124,14 +124,13 @@ def reset_level():
 
 
 class Soldier(pygame.sprite.Sprite):
-    def __init__(self, char_type: string, x, y, scale, speed, ammo, grenades):
+    def __init__(self, char_type: string, x, y, scale, speed, ammo):
         pygame.sprite.Sprite.__init__(self)
         self.char_type = char_type
         self.speed = speed
         self.ammo = ammo
         self.start_ammo = ammo
         self.shoot_cooldown = 0
-        self.grenades = grenades
         self.health = 100
         self.max_health = self.health
         self.direction = 1
@@ -151,7 +150,6 @@ class Soldier(pygame.sprite.Sprite):
         self.height = self.image.get_height()
 
     def update(self):
-        self.image = self.animation.update_animation(self.action)
         self.check_alive()
         # update cooldown
         if self.shoot_cooldown > 0:
@@ -255,12 +253,13 @@ class Soldier(pygame.sprite.Sprite):
         return self.health > 0
 
     def draw(self):
-        screen.blit(pygame.transform.flip(self.image, self.flip, False), self.rect)
+        image = self.animation.update_animation(self.action)
+        screen.blit(pygame.transform.flip(image, self.flip, False), self.rect)
 
 
 class Enemy(Soldier):
-    def __init__(self, x, y, scale, speed, ammo, grenades):
-        Soldier.__init__(self, 'enemy', x, y, scale, speed, ammo, grenades)
+    def __init__(self, x, y, scale, speed, ammo):
+        Soldier.__init__(self, 'enemy', x, y, scale, speed, ammo)
 
         self.move_counter = 0
         self.vision = pygame.Rect(0, 0, 150, 20)
@@ -315,7 +314,8 @@ class Enemy(Soldier):
 
 class Player(Soldier):
     def __init__(self, x, y, scale, speed, ammo, grenades):
-        Soldier.__init__(self, 'player', x, y, scale, speed, ammo, grenades)
+        Soldier.__init__(self, 'player', x, y, scale, speed, ammo)
+        self.grenades = grenades
 
     def move(self, moving_left, moving_right):
         dx, dy = super().move(moving_left, moving_right)
@@ -380,7 +380,7 @@ class World:
                         self._player = Player(x * TILE_SIZE, y * TILE_SIZE, 1.65, 5, 20, 5)
                         self._health_bar = HealthBar(10, 10, self.player.health, self.player.health)
                     elif tile == 16:  # create enemies
-                        enemy_group.add(Enemy(x * TILE_SIZE, y * TILE_SIZE, 1.65, 2, 20, 0))
+                        enemy_group.add(Enemy(x * TILE_SIZE, y * TILE_SIZE, 1.65, 2, 20))
                     elif tile == 17:  # create ammo box
                         item_box = ItemBox('Ammo', x * TILE_SIZE, y * TILE_SIZE)
                         item_box_group.add(item_box)
