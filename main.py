@@ -119,7 +119,6 @@ def draw_bg(screen: pygame.Surface):
 
 # function to reset level
 def reset_level():
-    enemy_group.empty()
     bullet_group.empty()
     grenade_group.empty()
     explosion_group.empty()
@@ -368,6 +367,7 @@ class World:
         self._water_group = pygame.sprite.Group()
         self._exit_group = pygame.sprite.Group()
         self._item_box_group = pygame.sprite.Group()
+        self._enemy_group = pygame.sprite.Group()
 
     def process_data(self, data):
         self.level_length = len(data[0])
@@ -390,7 +390,7 @@ class World:
                         self._player = Player(x * TILE_SIZE, y * TILE_SIZE, 1.65, 5, 20, 5)
                         self._health_bar = HealthBar(10, 10, self.player)
                     elif tile == 16:  # create enemies
-                        enemy_group.add(Enemy(x * TILE_SIZE, y * TILE_SIZE, 1.65, 2, 20))
+                        self._enemy_group.add(Enemy(x * TILE_SIZE, y * TILE_SIZE, 1.65, 2, 20))
                     elif tile == 17:  # create ammo box
                         self._item_box_group.add(ItemBox(img, img_rect, 'Ammo'))
                     elif tile == 18:  # create grenade box
@@ -415,9 +415,14 @@ class World:
     @property
     def exit_group(self):
         return self._exit_group
+
     @property
     def item_box_group(self):
         return self._item_box_group
+
+    @property
+    def enemy_group(self):
+        return self._enemy_group
 
     @property
     def health_bar(self):
@@ -513,7 +518,7 @@ class Bullet(pygame.sprite.Sprite):
             if world.player.alive:
                 world.player.health -= 5
                 self.kill()
-        for enemy in enemy_group:
+        for enemy in world.enemy_group:
             if pygame.sprite.spritecollide(enemy, bullet_group, False):
                 if enemy.alive:
                     enemy.health -= 25
@@ -570,7 +575,7 @@ class Grenade(pygame.sprite.Sprite):
             if abs(self.rect.centerx - world.player.rect.centerx) < TILE_SIZE * 2 and \
                     abs(self.rect.centery - world.player.rect.centery) < TILE_SIZE * 2:
                 world.player.health -= 50
-            for enemy in enemy_group:
+            for enemy in world.enemy_group:
                 if abs(self.rect.centerx - enemy.rect.centerx) < TILE_SIZE * 2 and \
                         abs(self.rect.centery - enemy.rect.centery) < TILE_SIZE * 2:
                     enemy.health -= 50
@@ -586,7 +591,6 @@ exit_button = button.Button(view.screen_width // 2 - 110, view.screen_height // 
 restart_button = button.Button(view.screen_width // 2 - 100, view.screen_height // 2 - 50, restart_img, 2)
 
 # create sprite groups
-enemy_group = pygame.sprite.Group()
 bullet_group = pygame.sprite.Group()
 grenade_group = pygame.sprite.Group()
 explosion_group = pygame.sprite.Group()
@@ -613,11 +617,10 @@ while run:
         # draw world map
         world.draw(screen)
 
-        for enemy in enemy_group:
+        for enemy in world.enemy_group:
             enemy.update(view)
             enemy.draw(screen)
 
-        # update and draw groups
         bullet_group.update(view)
         grenade_group.update(view)
         explosion_group.update(view)
