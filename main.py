@@ -47,9 +47,6 @@ start_intro = False
 # define player action variables
 moving_left = False
 moving_right = False
-shoot = False
-grenade = False
-grenade_thrown = False
 
 # load music and sounds
 # pygame.mixer.music.load('audio/music2.mp3')
@@ -290,7 +287,7 @@ class Enemy(Soldier):
 class Player(Soldier):
     def __init__(self, x, y, scale, speed, ammo, grenades):
         Soldier.__init__(self, 'player', x, y, scale, speed, ammo)
-        self.grenades = grenades
+        self._grenades = grenades
 
     def move(self, view: View, moving_left, moving_right):
         dx, dy = super().move(view, moving_left, moving_right)
@@ -306,9 +303,17 @@ class Player(Soldier):
 
     def create_grenade(self):
         # reduce grenades
-        self.grenades -= 1
+        self._grenades -= 1
 
         return Grenade(self.rect.centerx + (0.5 * self.rect.size[0] * self.direction), self.rect.top, self.direction)
+
+    @property
+    def grenades(self):
+        return self._grenades
+
+    @property
+    def has_grenades(self):
+        return self.grenades > 0
 
 
 class World:
@@ -642,14 +647,6 @@ while run:
 
         # update player actions
         if world.player.alive:
-            # shoot bullets
-            if shoot:
-                world.player.shoot()
-            # throw grenades
-            elif grenade and grenade_thrown is False and world.player.grenades > 0:
-                new_grenade = world.player.create_grenade()
-                world.add_grenade(new_grenade)
-                grenade_thrown = True
             if world.player.in_air:
                 world.player.update_action(Action.JUMP)
             elif moving_left or moving_right:
@@ -685,9 +682,12 @@ while run:
             if event.key == pygame.K_d:
                 moving_right = True
             if event.key == pygame.K_SPACE:
-                shoot = True
-            if event.key == pygame.K_q:
-                grenade = True
+                # shoot bullets
+                world.player.shoot()
+            if event.key == pygame.K_q and world.player.has_grenades:
+                # throw grenades
+                new_grenade = world.player.create_grenade()
+                world.add_grenade(new_grenade)
             if event.key == pygame.K_w and world.player.alive:
                 world.player.jump = True
                 jump_fx.play()
@@ -700,11 +700,6 @@ while run:
                 moving_left = False
             if event.key == pygame.K_d:
                 moving_right = False
-            if event.key == pygame.K_SPACE:
-                shoot = False
-            if event.key == pygame.K_q:
-                grenade = False
-                grenade_thrown = False
 
     pygame.display.update()
 
