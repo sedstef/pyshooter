@@ -417,6 +417,18 @@ class World:
         # show player health
         self.health_bar.draw(screen)
 
+        # show ammo
+        draw_text('AMMO: ', font, WHITE, 10, 35)
+        for x in range(self.player.ammo):
+            screen.blit(bullet_img, (90 + (x * 10), 40))
+        # show grenades
+        draw_text('GRENADES: ', font, WHITE, 10, 60)
+        for x in range(self.player.grenades):
+            screen.blit(grenade_img, (135 + (x * 15), 60))
+
+        self.player.update()
+        self.player.draw()
+
 
 class Decoration(pygame.sprite.Sprite):
     def __init__(self, img, x, y):
@@ -620,18 +632,6 @@ while run:
         draw_bg(screen)
         # draw world map
         world.draw(screen)
-
-        # show ammo
-        draw_text('AMMO: ', font, WHITE, 10, 35)
-        for x in range(world.player.ammo):
-            screen.blit(bullet_img, (90 + (x * 10), 40))
-        # show grenades
-        draw_text('GRENADES: ', font, WHITE, 10, 60)
-        for x in range(world.player.grenades):
-            screen.blit(grenade_img, (135 + (x * 15), 60))
-
-        world.player.update()
-        world.player.draw()
 
         for enemy in enemy_group:
             enemy.update()
