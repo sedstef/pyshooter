@@ -1,9 +1,12 @@
+import csv
+import random
+import string
+
 import pygame
 from pygame import mixer
-import os
-import random
-import csv
+
 import button
+import engine.animations as animations
 from engine.action import Action
 
 mixer.init()
@@ -121,7 +124,7 @@ def reset_level():
 
 
 class Soldier(pygame.sprite.Sprite):
-    def __init__(self, char_type, x, y, scale, speed, ammo, grenades):
+    def __init__(self, char_type: string, x, y, scale, speed, ammo, grenades):
         pygame.sprite.Sprite.__init__(self)
         self.char_type = char_type
         self.speed = speed
@@ -136,24 +139,12 @@ class Soldier(pygame.sprite.Sprite):
         self.jump = False
         self.in_air = True
         self.flip = False
-        self.animation_list = []
         self.frame_index = 0
         self.action = Action.IDLE
         self.update_time = pygame.time.get_ticks()
 
         # load all images for the players
-        animation_types = ['Idle', 'Run', 'Jump', 'Death']
-        for animation in animation_types:
-            # reset temporary list of images
-            temp_list = []
-            # count number of files in the folder
-            num_of_frames = len(os.listdir(f'img/{self.char_type}/{animation}'))
-            for i in range(num_of_frames):
-                img = pygame.image.load(f'img/{self.char_type}/{animation}/{i}.png').convert_alpha()
-                img = pygame.transform.scale(img, (int(img.get_width() * scale), int(img.get_height() * scale)))
-                temp_list.append(img)
-            self.animation_list.append(temp_list)
-
+        self.animation_list = animations.load_animations(self.char_type, scale)
         self.image = self.animation_list[self.action.value][self.frame_index]
         self.rect = self.image.get_rect()
         self.rect.center = (x, y)
