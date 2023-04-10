@@ -125,8 +125,6 @@ def reset_level():
     explosion_group.empty()
     item_box_group.empty()
     decoration_group.empty()
-    world.water_group.empty()
-    exit_group.empty()
 
 
 class Soldier(pygame.sprite.Sprite):
@@ -227,7 +225,7 @@ class Soldier(pygame.sprite.Sprite):
     @property
     def level_complete(self):
         # check for collision with exit
-        return pygame.sprite.spritecollide(self, exit_group, False)
+        return pygame.sprite.spritecollide(self, world.exit_group, False)
 
     def collision_x(self):
         pass
@@ -369,6 +367,7 @@ class World:
         self._health_bar = None
         self._platform = pygame.sprite.Group()
         self._water_group = pygame.sprite.Group()
+        self._exit_group = pygame.sprite.Group()
 
     def process_data(self, data):
         self.level_length = len(data[0])
@@ -402,7 +401,7 @@ class World:
                         item_box = ItemBox(img, img_rect, 'Health')
                         item_box_group.add(item_box)
                     elif tile == 20:  # create exit
-                        exit_group.add(Tile(img, img_rect))
+                        self._exit_group.add(Tile(img, img_rect))
 
     @property
     def platform(self):
@@ -411,6 +410,10 @@ class World:
     @property
     def water_group(self):
         return self._water_group
+
+    @property
+    def exit_group(self):
+        return self._exit_group
 
     @property
     def health_bar(self):
@@ -585,7 +588,6 @@ grenade_group = pygame.sprite.Group()
 explosion_group = pygame.sprite.Group()
 item_box_group = pygame.sprite.Group()
 decoration_group = pygame.sprite.Group()
-exit_group = pygame.sprite.Group()
 
 world = World.load_world(level)
 
@@ -620,7 +622,7 @@ while run:
         item_box_group.update(view)
         decoration_group.update(view)
         world.water_group.update(view)
-        exit_group.update(view)
+        world.exit_group.update(view)
 
         bullet_group.draw(screen)
         grenade_group.draw(screen)
@@ -628,7 +630,7 @@ while run:
         item_box_group.draw(screen)
         decoration_group.draw(screen)
         world.water_group.draw(screen)
-        exit_group.draw(screen)
+        world.exit_group.draw(screen)
 
         # show intro
         if start_intro is True:
