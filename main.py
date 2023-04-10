@@ -350,6 +350,25 @@ class Soldier(pygame.sprite.Sprite):
 
 
 class World():
+
+	def load_world(level: int):
+		# create empty tile list
+		data = []
+		for row in range(ROWS):
+			r = [-1] * COLS
+			data.append(r)
+
+		# load in level data and create world
+		with open(f'level{level}_data.csv', newline='') as csvfile:
+			reader = csv.reader(csvfile, delimiter=',')
+			for x, row in enumerate(reader):
+				for y, tile in enumerate(row):
+					data[x][y] = int(tile)
+
+		new_world = World()
+		new_world.process_data(data)
+		return new_world
+
 	def __init__(self):
 		self._player = None
 		self._health_bar = None
@@ -653,27 +672,7 @@ decoration_group = pygame.sprite.Group()
 water_group = pygame.sprite.Group()
 exit_group = pygame.sprite.Group()
 
-
-def load_world_data(level: int):
-	#create empty tile list
-	data = []
-	for row in range(ROWS):
-		r = [-1] * COLS
-		data.append(r)
-
-	# load in level data and create world
-	with open(f'level{level}_data.csv', newline='') as csvfile:
-		reader = csv.reader(csvfile, delimiter=',')
-		for x, row in enumerate(reader):
-			for y, tile in enumerate(row):
-				data[x][y] = int(tile)
-	return data
-
-
-world = World()
-world.process_data(load_world_data(level))
-
-
+world = World.load_world(level)
 
 run = True
 while run:
@@ -765,9 +764,7 @@ while run:
 				bg_scroll = 0
 				reset_level()
 				if level <= MAX_LEVELS:
-
-					world = World()
-					world.process_data(load_world_data(level))
+					world = World.load_world(level)
 		else:
 			screen_scroll = 0
 			if death_fade.fade():
@@ -776,8 +773,7 @@ while run:
 					start_intro = True
 					bg_scroll = 0
 					reset_level()
-					world = World()
-					world.process_data(load_world_data(level))
+					world = World.load_world(level)
 
 
 	for event in pygame.event.get():
