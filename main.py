@@ -10,6 +10,7 @@ from engine.animations import Action
 from engine.animations import ActionAnimation
 from engine.explosion import Explosion
 from engine.screenfade import ScreenFade
+from engine.view import View
 
 mixer.init()
 pygame.init()
@@ -17,6 +18,7 @@ pygame.init()
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = int(SCREEN_WIDTH * 0.8)
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+view = View(screen)
 
 pygame.display.set_caption('Shooter')
 
@@ -32,7 +34,8 @@ COLS = 150
 TILE_SIZE = SCREEN_HEIGHT // ROWS
 TILE_TYPES = 21
 MAX_LEVELS = 3
-screen_scroll = 0
+
+
 bg_scroll = 0
 level = 1
 start_game = False
@@ -151,13 +154,13 @@ class Soldier(pygame.sprite.Sprite):
         self.width = self.image.get_width()
         self.height = self.image.get_height()
 
-    def update(self):
+    def update(self, view: View):
         self.check_alive()
         # update cooldown
         if self.shoot_cooldown > 0:
             self.shoot_cooldown -= 1
 
-    def move(self, screen, moving_left, moving_right):
+    def move(self, view: View, moving_left, moving_right):
         # reset movement variables
         dx = 0
         dy = 0
@@ -207,12 +210,12 @@ class Soldier(pygame.sprite.Sprite):
             self.health = 0
 
         # check if fallen off the map
-        if self.rect.bottom > screen.get_height():
+        if self.rect.bottom > view.screen_height:
             self.health = 0
 
         # check if going off the edges of the screen
         if self.char_type == 'player':
-            if self.rect.left + dx < 0 or self.rect.right + dx > screen.get_width():
+            if self.rect.left + dx < 0 or self.rect.right + dx > view.screen_width:
                 dx = 0
 
         # update rectangle position
@@ -254,7 +257,7 @@ class Soldier(pygame.sprite.Sprite):
     def alive(self) -> bool:
         return self.health > 0
 
-    def draw(self):
+    def draw(self, screen:pygame.Surface):
         image = self.animation.update_animation(self.action)
         screen.blit(pygame.transform.flip(image, self.flip, False), self.rect)
 
@@ -268,16 +271,16 @@ class Enemy(Soldier):
         self.idling = False
         self.idling_counter = 0
 
-    def update(self):
-        self.ai()
-        super().update()
+    def update(self,view: View):
+        self.ai(view)
+        super().update(view)
 
     def collision_x(self):
         # if the AI has hit a wall then make it turn around
         self.direction *= -1
         self.move_counter = 0
 
-    def ai(self):
+    def ai(self,view: View):
         if self.alive and world.player.alive:
             if self.idling is False and random.randint(1, 200) == 1:
                 self.update_action(Action.IDLE)
@@ -296,7 +299,7 @@ class Enemy(Soldier):
                     else:
                         ai_moving_right = False
                     ai_moving_left = not ai_moving_right
-                    self.move(screen, ai_moving_left, ai_moving_right)
+                    self.move(view, ai_moving_left, ai_moving_right)
                     self.update_action(Action.RUN)
                     self.move_counter += 1
                     # update AI vision as the enemy moves
@@ -311,7 +314,7 @@ class Enemy(Soldier):
                         self.idling = False
 
         # scroll
-        self.rect.x += screen_scroll
+        self.rect.x += view.screen_scroll
 
 
 class Player(Soldier):
@@ -319,13 +322,13 @@ class Player(Soldier):
         Soldier.__init__(self, 'player', x, y, scale, speed, ammo)
         self.grenades = grenades
 
-    def move(self, screen: pygame.Surface, moving_left, moving_right):
-        dx, dy = super().move(screen, moving_left, moving_right)
+    def move(self, view: View, moving_left, moving_right):
+        dx, dy = super().move(view, moving_left, moving_right)
 
         # update scroll based on player position
         scroll = 0
-        if (self.rect.right > screen.get_width() - SCROLL_THRESH and bg_scroll < (
-                world.level_length * TILE_SIZE) - screen.get_width()) \
+        if (self.rect.right > view.screen_width - SCROLL_THRESH and bg_scroll < (
+                world.level_length * TILE_SIZE) - view.screen_width) \
                 or (self.rect.left < SCROLL_THRESH and bg_scroll > abs(dx)):
             self.rect.x -= dx
             scroll = -dx
@@ -337,6 +340,7 @@ class Player(Soldier):
         self.grenades -= 1
 
         return Grenade(self.rect.centerx + (0.5 * self.rect.size[0] * self.direction), self.rect.top, self.direction)
+
 
 class World:
 
@@ -411,7 +415,7 @@ class World:
 
     def draw(self, screen: pygame.Surface):
         for tile in self.obstacle_list:
-            tile[1][0] += screen_scroll
+            tile[1][0] += view.screen_scroll
             screen.blit(tile[0], tile[1])
 
         # show player health
@@ -426,8 +430,8 @@ class World:
         for x in range(self.player.grenades):
             screen.blit(grenade_img, (135 + (x * 15), 60))
 
-        self.player.update()
-        self.player.draw()
+        self.player.update(view)
+        self.player.draw(screen)
 
 
 class Decoration(pygame.sprite.Sprite):
@@ -437,8 +441,8 @@ class Decoration(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.midtop = (x + TILE_SIZE // 2, y + (TILE_SIZE - self.image.get_height()))
 
-    def update(self):
-        self.rect.x += screen_scroll
+    def update(self, view: View):
+        self.rect.x += view.screen_scroll
 
 
 class Water(pygame.sprite.Sprite):
@@ -448,8 +452,8 @@ class Water(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.midtop = (x + TILE_SIZE // 2, y + (TILE_SIZE - self.image.get_height()))
 
-    def update(self):
-        self.rect.x += screen_scroll
+    def update(self,view: View):
+        self.rect.x += view.screen_scroll
 
 
 class Exit(pygame.sprite.Sprite):
@@ -459,8 +463,8 @@ class Exit(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.midtop = (x + TILE_SIZE // 2, y + (TILE_SIZE - self.image.get_height()))
 
-    def update(self):
-        self.rect.x += screen_scroll
+    def update(self,view: View):
+        self.rect.x += view.screen_scroll
 
 
 class ItemBox(pygame.sprite.Sprite):
@@ -471,9 +475,9 @@ class ItemBox(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.midtop = (x + TILE_SIZE // 2, y + (TILE_SIZE - self.image.get_height()))
 
-    def update(self):
+    def update(self, view: View):
         # scroll
-        self.rect.x += screen_scroll
+        self.rect.x += view.screen_scroll
         # check if the player has picked up the box
         if pygame.sprite.collide_rect(self, world.player):
             # check what kind of box it was
@@ -513,11 +517,11 @@ class Bullet(pygame.sprite.Sprite):
         self.rect.center = (x, y)
         self.direction = direction
 
-    def update(self, screen: pygame.Surface):
+    def update(self, view: View):
         # move bullet
-        self.rect.x += (self.direction * self.speed) + screen_scroll
+        self.rect.x += (self.direction * self.speed) + view.screen_scroll
         # check if bullet has gone off screen
-        if self.rect.right < 0 or self.rect.left > screen.get_width():
+        if self.rect.right < 0 or self.rect.left > view.screen_width:
             self.kill()
         # check for collision with level
         for tile in world.obstacle_list:
@@ -549,7 +553,7 @@ class Grenade(pygame.sprite.Sprite):
         self.height = self.image.get_height()
         self.direction = direction
 
-    def update(self):
+    def update(self,view: View):
         self.vel_y += GRAVITY
         dx = self.direction * self.speed
         dy = self.vel_y
@@ -573,7 +577,7 @@ class Grenade(pygame.sprite.Sprite):
                     dy = tile[1].top - self.rect.bottom
 
         # update grenade position
-        self.rect.x += dx + screen_scroll
+        self.rect.x += dx + view.screen_scroll
         self.rect.y += dy
 
         # countdown timer
@@ -597,9 +601,9 @@ intro_fade = ScreenFade(1, BLACK, 4)
 death_fade = ScreenFade(2, PINK, 4)
 
 # create buttons
-start_button = button.Button(screen.get_width() // 2 - 130, screen.get_height() // 2 - 150, start_img, 1)
-exit_button = button.Button(screen.get_width() // 2 - 110, screen.get_height() // 2 + 50, exit_img, 1)
-restart_button = button.Button(screen.get_width() // 2 - 100, screen.get_height() // 2 - 50, restart_img, 2)
+start_button = button.Button(view.screen_width // 2 - 130, view.screen_height // 2 - 150, start_img, 1)
+exit_button = button.Button(view.screen_width // 2 - 110, view.screen_height // 2 + 50, exit_img, 1)
+restart_button = button.Button(view.screen_width // 2 - 100, view.screen_height // 2 - 50, restart_img, 2)
 
 # create sprite groups
 enemy_group = pygame.sprite.Group()
@@ -634,17 +638,17 @@ while run:
         world.draw(screen)
 
         for enemy in enemy_group:
-            enemy.update()
-            enemy.draw()
+            enemy.update(view)
+            enemy.draw(screen)
 
         # update and draw groups
-        bullet_group.update(screen)
-        grenade_group.update()
-        explosion_group.update(screen_scroll)
-        item_box_group.update()
-        decoration_group.update()
-        water_group.update()
-        exit_group.update()
+        bullet_group.update(view)
+        grenade_group.update(view)
+        explosion_group.update(view)
+        item_box_group.update(view)
+        decoration_group.update(view)
+        water_group.update(view)
+        exit_group.update(view)
 
         bullet_group.draw(screen)
         grenade_group.draw(screen)
@@ -676,8 +680,8 @@ while run:
                 world.player.update_action(Action.RUN)
             else:
                 world.player.update_action(Action.IDLE)
-            screen_scroll = world.player.move(screen, moving_left, moving_right)
-            bg_scroll -= screen_scroll
+            view.screen_scroll = world.player.move(view, moving_left, moving_right)
+            bg_scroll -= view.screen_scroll
             # check if player has completed the level
             if world.player.level_complete:
                 start_intro = True
@@ -687,7 +691,7 @@ while run:
                 if level <= MAX_LEVELS:
                     world = World.load_world(level)
         else:
-            screen_scroll = 0
+            view.screen_scroll = 0
             if death_fade.fade(screen):
                 if restart_button.draw(screen):
                     death_fade.fade_counter = 0

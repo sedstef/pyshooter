@@ -1,5 +1,7 @@
 import pygame
 
+from engine.view import View
+
 EXPLOSION_SPEED = 4
 
 
@@ -17,9 +19,9 @@ class Explosion(pygame.sprite.Sprite):
         self.rect.center = (x, y)
         self.counter = 0
 
-    def update(self, screen_scroll: int):
+    def update(self, view: View):
         # scroll
-        self.rect.x += screen_scroll
+        self.rect.x += view.screen_scroll
 
         # update explosion animation
         self.counter += 1
