@@ -6,8 +6,8 @@ import pygame
 from pygame import mixer
 
 import button
-import engine.animations as animations
-from engine.action import Action
+from engine.animations import Action
+from engine.animations import ActionAnimation
 
 mixer.init()
 pygame.init()
@@ -139,20 +139,19 @@ class Soldier(pygame.sprite.Sprite):
         self.jump = False
         self.in_air = True
         self.flip = False
-        self.frame_index = 0
+
         self.action = Action.IDLE
-        self.update_time = pygame.time.get_ticks()
 
         # load all images for the players
-        self.animation_list = animations.load_animations(self.char_type, scale)
-        self.image = self.animation_list[self.action.value][self.frame_index]
+        self.animation = ActionAnimation.load_animations(self.char_type, scale)
+        self.image = self.animation.image(self.action)
         self.rect = self.image.get_rect()
         self.rect.center = (x, y)
         self.width = self.image.get_width()
         self.height = self.image.get_height()
 
     def update(self):
-        self.update_animation()
+        self.image = self.animation.update_animation(self.action)
         self.check_alive()
         # update cooldown
         if self.shoot_cooldown > 0:
@@ -239,29 +238,11 @@ class Soldier(pygame.sprite.Sprite):
             self.ammo -= 1
             shot_fx.play()
 
-    def update_animation(self):
-        # update animation
-        ANIMATION_COOLDOWN = 100
-        # update image depending on current frame
-        self.image = self.animation_list[self.action.value][self.frame_index]
-        # check if enough time has passed since the last update
-        if pygame.time.get_ticks() - self.update_time > ANIMATION_COOLDOWN:
-            self.update_time = pygame.time.get_ticks()
-            self.frame_index += 1
-        # if the animation has run out the reset back to the start
-        if self.frame_index >= len(self.animation_list[self.action.value]):
-            if Action.DEATH == self.action:
-                self.frame_index = len(self.animation_list[self.action.value]) - 1
-            else:
-                self.frame_index = 0
-
     def update_action(self, new_action: Action):
         # check if the new action is different to the previous one
         if new_action != self.action:
             self.action = new_action
-            # update the animation settings
-            self.frame_index = 0
-            self.update_time = pygame.time.get_ticks()
+            self.animation.reset(new_action)
 
     def check_alive(self):
         if self.health <= 0:
@@ -675,7 +656,7 @@ while run:
 
     clock.tick(FPS)
 
-    if start_game == False:
+    if start_game is False:
         # draw menu
         screen.fill(BG)
         # add buttons
