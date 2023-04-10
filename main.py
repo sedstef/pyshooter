@@ -35,7 +35,6 @@ TILE_SIZE = SCREEN_HEIGHT // ROWS
 TILE_TYPES = 21
 MAX_LEVELS = 3
 
-
 bg_scroll = 0
 level = 1
 start_game = False
@@ -111,7 +110,8 @@ def draw_bg(screen: pygame.Surface):
     width = sky_img.get_width()
     for x in range(5):
         screen.blit(sky_img, ((x * width) - bg_scroll * 0.5, 0))
-        screen.blit(mountain_img, ((x * width) - bg_scroll * 0.6, screen.get_height() - mountain_img.get_height() - 300))
+        screen.blit(mountain_img,
+                    ((x * width) - bg_scroll * 0.6, screen.get_height() - mountain_img.get_height() - 300))
         screen.blit(pine1_img, ((x * width) - bg_scroll * 0.7, screen.get_height() - pine1_img.get_height() - 150))
         screen.blit(pine2_img, ((x * width) - bg_scroll * 0.8, screen.get_height() - pine2_img.get_height()))
 
@@ -257,7 +257,7 @@ class Soldier(pygame.sprite.Sprite):
     def alive(self) -> bool:
         return self.health > 0
 
-    def draw(self, screen:pygame.Surface):
+    def draw(self, screen: pygame.Surface):
         image = self.animation.update_animation(self.action)
         screen.blit(pygame.transform.flip(image, self.flip, False), self.rect)
 
@@ -271,7 +271,7 @@ class Enemy(Soldier):
         self.idling = False
         self.idling_counter = 0
 
-    def update(self,view: View):
+    def update(self, view: View):
         self.ai(view)
         super().update(view)
 
@@ -280,7 +280,7 @@ class Enemy(Soldier):
         self.direction *= -1
         self.move_counter = 0
 
-    def ai(self,view: View):
+    def ai(self, view: View):
         if self.alive and world.player.alive:
             if self.idling is False and random.randint(1, 200) == 1:
                 self.update_action(Action.IDLE)
@@ -452,7 +452,7 @@ class Water(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.midtop = (x + TILE_SIZE // 2, y + (TILE_SIZE - self.image.get_height()))
 
-    def update(self,view: View):
+    def update(self, view: View):
         self.rect.x += view.screen_scroll
 
 
@@ -463,7 +463,7 @@ class Exit(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.midtop = (x + TILE_SIZE // 2, y + (TILE_SIZE - self.image.get_height()))
 
-    def update(self,view: View):
+    def update(self, view: View):
         self.rect.x += view.screen_scroll
 
 
@@ -553,7 +553,7 @@ class Grenade(pygame.sprite.Sprite):
         self.height = self.image.get_height()
         self.direction = direction
 
-    def update(self,view: View):
+    def update(self, view: View):
         self.vel_y += GRAVITY
         dx = self.direction * self.speed
         dy = self.vel_y
