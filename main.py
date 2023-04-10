@@ -311,6 +311,10 @@ class Player(Soldier):
     def grenades(self):
         return self._grenades
 
+    @grenades.setter
+    def grenades(self, grenades: int):
+        self._grenades += grenades
+
     @property
     def has_grenades(self):
         return self.grenades > 0
@@ -478,7 +482,7 @@ class ItemBox(pygame.sprite.Sprite):
             elif self.item_type == 'Ammo':
                 world.player.ammo += 15
             elif self.item_type == 'Grenade':
-                world.player.grenades += 3
+                world.player.grenades = 3
             # delete the item box
             self.kill()
 
@@ -673,33 +677,33 @@ while run:
 
     for event in pygame.event.get():
         # quit game
-        if event.type == pygame.QUIT:
+        if event.type == pygame.QUIT or \
+                (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
             run = False
-        # keyboard presses
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_a:
-                moving_left = True
-            if event.key == pygame.K_d:
-                moving_right = True
-            if event.key == pygame.K_SPACE:
-                # shoot bullets
-                world.player.shoot()
-            if event.key == pygame.K_q and world.player.has_grenades:
-                # throw grenades
-                new_grenade = world.player.create_grenade()
-                world.add_grenade(new_grenade)
-            if event.key == pygame.K_w and world.player.alive:
-                world.player.jump = True
-                jump_fx.play()
-            if event.key == pygame.K_ESCAPE:
-                run = False
+        elif world.player.alive:
+            # keyboard presses
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_a:
+                    moving_left = True
+                if event.key == pygame.K_d:
+                    moving_right = True
+                if event.key == pygame.K_SPACE:
+                    # shoot bullets
+                    world.player.shoot()
+                if event.key == pygame.K_q and world.player.has_grenades:
+                    # throw grenades
+                    new_grenade = world.player.create_grenade()
+                    world.add_grenade(new_grenade)
+                if event.key == pygame.K_w and world.player.alive:
+                    world.player.jump = True
+                    jump_fx.play()
 
-        # keyboard button released
-        if event.type == pygame.KEYUP:
-            if event.key == pygame.K_a:
-                moving_left = False
-            if event.key == pygame.K_d:
-                moving_right = False
+            # keyboard button released
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_a:
+                    moving_left = False
+                if event.key == pygame.K_d:
+                    moving_right = False
 
     pygame.display.update()
 
