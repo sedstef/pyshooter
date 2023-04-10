@@ -5,6 +5,7 @@ from engine import images
 from engine.explosion import Explosion
 from engine.view import View
 
+
 class Grenade(pygame.sprite.Sprite):
     def __init__(self, x, y, direction):
         pygame.sprite.Sprite.__init__(self)

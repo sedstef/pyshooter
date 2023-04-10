@@ -36,6 +36,7 @@ class HealthBar:
         for x in range(self.player.grenades):
             screen.blit(images.get_grenade(), (135 + (x * 15), 60))
 
-    def draw_text(self, screen: pygame.Surface, text, font, text_col, x, y):
+    @staticmethod
+    def draw_text(screen: pygame.Surface, text, font, text_col, x, y):
         txt_img = font.render(text, True, text_col)
         screen.blit(txt_img, (x, y))

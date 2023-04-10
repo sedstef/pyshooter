@@ -3,10 +3,10 @@ import string
 import pygame
 from pygame.sprite import spritecollide
 
-from engine.animations import Action, ActionAnimation
-from engine.view import View
 from const import GRAVITY
+from engine.animations import Action, ActionAnimation
 from engine.bullet import Bullet
+from engine.view import View
 
 
 class Soldier(pygame.sprite.Sprite):

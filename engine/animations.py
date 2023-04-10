@@ -1,8 +1,8 @@
+import os
+import string
 from enum import IntEnum
 
 import pygame
-import os
-import string
 
 
 class Action(IntEnum):
@@ -31,7 +31,6 @@ class ActionAnimation:
                 temp_list.append(img)
             animation_list.append(temp_list)
         return ActionAnimation(animation_list)
-
 
     def __init__(self, animation_list: []):
         self.frame_index = 0

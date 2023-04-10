@@ -1,7 +1,7 @@
+from const import SCROLL_THRESH, TILE_SIZE
 from engine.grenade import Grenade
 from engine.soldier import Soldier
 from engine.view import View
-from const import SCROLL_THRESH, TILE_SIZE
 
 
 class Player(Soldier):

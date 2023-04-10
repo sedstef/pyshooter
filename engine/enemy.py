@@ -2,10 +2,10 @@ import random
 
 import pygame
 
+from const import TILE_SIZE
 from engine.animations import Action
 from engine.soldier import Soldier
 from engine.view import View
-from const import GRAVITY,SCREEN_WIDTH,SCREEN_HEIGHT,TILE_TYPES,TILE_SIZE, ROWS,COLS,MAX_LEVELS
 
 
 class Enemy(Soldier):
@@ -17,8 +17,8 @@ class Enemy(Soldier):
         self.idling = False
         self.idling_counter = 0
 
-    def update(self, view: View,world):
-        self.ai(view,world)
+    def update(self, view: View, world):
+        self.ai(view, world)
         super().update(view, world)
 
     def collision_x(self):
@@ -45,7 +45,7 @@ class Enemy(Soldier):
                     else:
                         ai_moving_right = False
                     ai_moving_left = not ai_moving_right
-                    self.move(view,world,  ai_moving_left, ai_moving_right)
+                    self.move(view, world, ai_moving_left, ai_moving_right)
                     self.update_action(Action.RUN)
                     self.move_counter += 1
                     # update AI vision as the enemy moves

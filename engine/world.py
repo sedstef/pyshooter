@@ -6,12 +6,11 @@ from pygame.sprite import Group
 from const import ROWS, COLS, TILE_SIZE
 from engine import images
 from engine.enemy import Enemy
+from engine.healthbar import HealthBar
+from engine.itembox import ItemBox
 from engine.player import Player
 from engine.tile import Tile
 from engine.view import View
-
-from engine.healthbar import HealthBar
-from engine.itembox import ItemBox
 
 
 class World:
@@ -59,7 +58,6 @@ class World:
                     img_rect = img.get_rect()
                     img_rect.x = x * TILE_SIZE
                     img_rect.y = y * TILE_SIZE
-                    tile_data = (img, img_rect)
                     if tile >= 0 and tile <= 8:
                         self._platform.add(Tile(img, img_rect))
                     elif tile >= 9 and tile <= 10:

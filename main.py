@@ -2,10 +2,10 @@ import pygame
 from pygame import mixer
 
 import button
-from const import SCREEN_WIDTH,SCREEN_HEIGHT,TILE_TYPES,TILE_SIZE, MAX_LEVELS
-from engine.background import Background
-from engine.background import BG
+from const import SCREEN_WIDTH, SCREEN_HEIGHT, MAX_LEVELS
 from engine.animations import Action
+from engine.background import BG
+from engine.background import Background
 from engine.screenfade import ScreenFade
 from engine.view import View
 from engine.world import World
@@ -23,7 +23,6 @@ clock = pygame.time.Clock()
 FPS = 60
 
 # define game variables
-
 level = 1
 start_game = False
 
@@ -73,6 +72,7 @@ font = pygame.font.SysFont('Futura', 30)
 def create_intro_fade():
     return ScreenFade(1, BLACK, 4)
 
+
 death_fade = ScreenFade(2, PINK, 4)
 
 # create buttons
@@ -102,7 +102,7 @@ while run:
         background.draw(screen, view)
 
         for enemy in world.enemy_group:
-            enemy.update(view,world)
+            enemy.update(view, world)
             enemy.draw(screen)
 
         world.update(view)

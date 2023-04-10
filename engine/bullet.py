@@ -17,7 +17,7 @@ class Bullet(pygame.sprite.Sprite):
     def update(self, view: View, world):
         # move bullet
         self.rect.x += (self.direction * self.speed) + view.screen_scroll
-        # check if bullet has gone off screen
+        # check if bullet has gone off-screen
         if self.rect.right < 0 or self.rect.left > view.screen_width:
             self.kill()
 

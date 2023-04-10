@@ -13,10 +13,12 @@ class ScreenFade:
         fade_complete = False
         self.fade_counter += self.speed
         if self.direction == 1:  # whole screen fade
-            pygame.draw.rect(screen, self.colour, (0 - self.fade_counter, 0, screen.get_width() // 2, screen.get_height()))
+            pygame.draw.rect(screen, self.colour,
+                             (0 - self.fade_counter, 0, screen.get_width() // 2, screen.get_height()))
             pygame.draw.rect(screen, self.colour,
                              (screen.get_width() // 2 + self.fade_counter, 0, screen.get_width(), screen.get_height()))
-            pygame.draw.rect(screen, self.colour, (0, 0 - self.fade_counter, screen.get_width(), screen.get_height() // 2))
+            pygame.draw.rect(screen, self.colour,
+                             (0, 0 - self.fade_counter, screen.get_width(), screen.get_height() // 2))
             pygame.draw.rect(screen, self.colour,
                              (0, screen.get_height() // 2 + self.fade_counter, screen.get_width(), screen.get_height()))
         if self.direction == 2:  # vertical screen fade down
