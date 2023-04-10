@@ -124,7 +124,6 @@ def reset_level():
     grenade_group.empty()
     explosion_group.empty()
     item_box_group.empty()
-    decoration_group.empty()
 
 
 class Soldier(pygame.sprite.Sprite):
@@ -366,6 +365,7 @@ class World:
         self._player = None
         self._health_bar = None
         self._platform = pygame.sprite.Group()
+        self._decoration_group = pygame.sprite.Group()
         self._water_group = pygame.sprite.Group()
         self._exit_group = pygame.sprite.Group()
 
@@ -385,7 +385,7 @@ class World:
                     elif tile >= 9 and tile <= 10:
                         self._water_group.add(Tile(img, img_rect))
                     elif tile >= 11 and tile <= 14:
-                        decoration_group.add(Tile(img, img_rect))
+                        self._decoration_group.add(Tile(img, img_rect))
                     elif tile == 15:  # create player
                         self._player = Player(x * TILE_SIZE, y * TILE_SIZE, 1.65, 5, 20, 5)
                         self._health_bar = HealthBar(10, 10, self.player)
@@ -406,6 +406,10 @@ class World:
     @property
     def platform(self):
         return self._platform
+
+    @property
+    def decoration_group(self):
+        return self._decoration_group
 
     @property
     def water_group(self):
@@ -587,7 +591,6 @@ bullet_group = pygame.sprite.Group()
 grenade_group = pygame.sprite.Group()
 explosion_group = pygame.sprite.Group()
 item_box_group = pygame.sprite.Group()
-decoration_group = pygame.sprite.Group()
 
 world = World.load_world(level)
 
@@ -620,7 +623,7 @@ while run:
         grenade_group.update(view)
         explosion_group.update(view)
         item_box_group.update(view)
-        decoration_group.update(view)
+        world.decoration_group.update(view)
         world.water_group.update(view)
         world.exit_group.update(view)
 
@@ -628,7 +631,7 @@ while run:
         grenade_group.draw(screen)
         explosion_group.draw(screen)
         item_box_group.draw(screen)
-        decoration_group.draw(screen)
+        world.decoration_group.draw(screen)
         world.water_group.draw(screen)
         world.exit_group.draw(screen)
 
