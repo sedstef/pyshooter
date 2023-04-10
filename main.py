@@ -38,7 +38,6 @@ TILE_SIZE = SCREEN_HEIGHT // ROWS
 TILE_TYPES = 21
 MAX_LEVELS = 3
 
-bg_scroll = 0
 level = 1
 start_game = False
 start_intro = False
@@ -107,11 +106,11 @@ def draw_bg(screen: pygame.Surface):
     screen.fill(BG)
     width = sky_img.get_width()
     for x in range(5):
-        screen.blit(sky_img, ((x * width) - bg_scroll * 0.5, 0))
+        screen.blit(sky_img, ((x * width) - view.bg_scroll * 0.5, 0))
         screen.blit(mountain_img,
-                    ((x * width) - bg_scroll * 0.6, screen.get_height() - mountain_img.get_height() - 300))
-        screen.blit(pine1_img, ((x * width) - bg_scroll * 0.7, screen.get_height() - pine1_img.get_height() - 150))
-        screen.blit(pine2_img, ((x * width) - bg_scroll * 0.8, screen.get_height() - pine2_img.get_height()))
+                    ((x * width) - view.bg_scroll * 0.6, screen.get_height() - mountain_img.get_height() - 300))
+        screen.blit(pine1_img, ((x * width) - view.bg_scroll * 0.7, screen.get_height() - pine1_img.get_height() - 150))
+        screen.blit(pine2_img, ((x * width) - view.bg_scroll * 0.8, screen.get_height() - pine2_img.get_height()))
 
 
 class Soldier(pygame.sprite.Sprite):
@@ -313,13 +312,12 @@ class Player(Soldier):
 
         # update scroll based on player position
         scroll = 0
-        if (self.rect.right > view.screen_width - SCROLL_THRESH and bg_scroll < (
+        if (self.rect.right > view.screen_width - SCROLL_THRESH and view.bg_scroll < (
                 world.level_length * TILE_SIZE) - view.screen_width) \
-                or (self.rect.left < SCROLL_THRESH and bg_scroll > abs(dx)):
+                or (self.rect.left < SCROLL_THRESH and view.bg_scroll > abs(dx)):
             self.rect.x -= dx
             scroll = -dx
-
-        return scroll
+        view.screen_scroll = scroll
 
     def create_grenade(self):
         # reduce grenades
@@ -675,13 +673,13 @@ while run:
                 world.player.update_action(Action.RUN)
             else:
                 world.player.update_action(Action.IDLE)
-            view.screen_scroll = world.player.move(view, moving_left, moving_right)
-            bg_scroll -= view.screen_scroll
+            world.player.move(view, moving_left, moving_right)
+            view.bg_scroll -= view.screen_scroll
             # check if player has completed the level
             if world.player.level_complete:
                 start_intro = True
                 level += 1
-                bg_scroll = 0
+                view.bg_scroll = 0
                 if level <= MAX_LEVELS:
                     world = World.load_world(level)
         else:
@@ -690,7 +688,7 @@ while run:
                 if restart_button.draw(screen):
                     death_fade.fade_counter = 0
                     start_intro = True
-                    bg_scroll = 0
+                    view.bg_scroll = 0
                     world = World.load_world(level)
 
     for event in pygame.event.get():
