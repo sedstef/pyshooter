@@ -121,13 +121,13 @@ class Soldier(pygame.sprite.Sprite):
         self.width = self.image.get_width()
         self.height = self.image.get_height()
 
-    def update(self, view: View):
+    def update(self, view: View, world):
         self.check_alive()
         # update cooldown
         if self.shoot_cooldown > 0:
             self.shoot_cooldown -= 1
 
-    def move(self, view: View, moving_left, moving_right):
+    def move(self, view: View, world, moving_left, moving_right):
         # reset movement variables
         dx = 0
         dy = 0
@@ -190,15 +190,14 @@ class Soldier(pygame.sprite.Sprite):
         self.rect.y += dy
         return dx, dy
 
-    @property
-    def level_complete(self):
+    def level_complete(self, world):
         # check for collision with exit
         return spritecollide(self, world.exit_group, False)
 
     def collision_x(self):
         pass
 
-    def shoot(self):
+    def shoot(self, world):
         if self.shoot_cooldown == 0 and self.ammo > 0:
             self.shoot_cooldown = 20
             bullet = Bullet(self.rect.centerx + (0.75 * self.rect.size[0] * self.direction), self.rect.centery,
@@ -238,16 +237,16 @@ class Enemy(Soldier):
         self.idling = False
         self.idling_counter = 0
 
-    def update(self, view: View):
-        self.ai(view)
-        super().update(view)
+    def update(self, view: View,world):
+        self.ai(view,world)
+        super().update(view, world)
 
     def collision_x(self):
         # if the AI has hit a wall then make it turn around
         self.direction *= -1
         self.move_counter = 0
 
-    def ai(self, view: View):
+    def ai(self, view: View, world):
         if self.alive and world.player.alive:
             if self.idling is False and random.randint(1, 200) == 1:
                 self.update_action(Action.IDLE)
@@ -258,7 +257,7 @@ class Enemy(Soldier):
                 # stop running and face the player
                 self.update_action(Action.IDLE)
                 # shoot
-                self.shoot()
+                self.shoot(world)
             else:
                 if self.idling is False:
                     if self.direction == 1:
@@ -266,7 +265,7 @@ class Enemy(Soldier):
                     else:
                         ai_moving_right = False
                     ai_moving_left = not ai_moving_right
-                    self.move(view, ai_moving_left, ai_moving_right)
+                    self.move(view,world,  ai_moving_left, ai_moving_right)
                     self.update_action(Action.RUN)
                     self.move_counter += 1
                     # update AI vision as the enemy moves
@@ -289,8 +288,8 @@ class Player(Soldier):
         Soldier.__init__(self, 'player', x, y, scale, speed, ammo)
         self._grenades = grenades
 
-    def move(self, view: View, moving_left, moving_right):
-        dx, dy = super().move(view, moving_left, moving_right)
+    def move(self, view: View, world, moving_left, moving_right):
+        dx, dy = super().move(view, world, moving_left, moving_right)
 
         # update scroll based on player position
         scroll = 0
@@ -435,21 +434,21 @@ class World:
         self._platform.update(view)
         self._water_group.update(view)
         self._decoration_group.update(view)
-        self._item_box_group.update(view)
         self._exit_group.update(view)
+        self._item_box_group.update(view, self)
 
-        self._player.update(view)
+        self._player.update(view, self)
 
-        self._bullet_group.update(view)
-        self._grenade_group.update(view)
+        self._bullet_group.update(view, self)
+        self._grenade_group.update(view, self)
         self._explosion_group.update(view)
 
     def draw(self, screen: pygame.Surface):
         self._platform.draw(screen)
         self._water_group.draw(screen)
         self._decoration_group.draw(screen)
-        self._item_box_group.draw(screen)
         self._exit_group.draw(screen)
+        self._item_box_group.draw(screen)
 
         # TODO self._enemy_group.draw(screen)
         self._player.draw(screen)
@@ -469,20 +468,21 @@ class ItemBox(pygame.sprite.Sprite):
         self.rect = img_rect
         self.item_type = item_type
 
-    def update(self, view: View):
+    def update(self, view: View, world: World):
         # scroll
         self.rect.x += view.screen_scroll
+        player = world.player
         # check if the player has picked up the box
-        if collide_rect(self, world.player):
+        if collide_rect(self, player):
             # check what kind of box it was
             if self.item_type == 'Health':
-                world.player.health += 25
-                if world.player.health > world.player.max_health:
-                    world.player.health = world.player.max_health
+                player.health += 25
+                if player.health > player.max_health:
+                    player.health = player.max_health
             elif self.item_type == 'Ammo':
-                world.player.ammo += 15
+                player.ammo += 15
             elif self.item_type == 'Grenade':
-                world.player.grenades = 3
+                player.grenades = 3
             # delete the item box
             self.kill()
 
@@ -525,7 +525,7 @@ class Bullet(pygame.sprite.Sprite):
         self.rect.center = (x, y)
         self.direction = direction
 
-    def update(self, view: View):
+    def update(self, view: View, world: World):
         # move bullet
         self.rect.x += (self.direction * self.speed) + view.screen_scroll
         # check if bullet has gone off screen
@@ -561,7 +561,7 @@ class Grenade(pygame.sprite.Sprite):
         self.height = self.image.get_height()
         self.direction = direction
 
-    def update(self, view: View):
+    def update(self, view: View, world: World):
         self.vel_y += GRAVITY
         dx = self.direction * self.speed
         dy = self.vel_y
@@ -637,7 +637,7 @@ while run:
         background.draw(screen, view)
 
         for enemy in world.enemy_group:
-            enemy.update(view)
+            enemy.update(view,world)
             enemy.draw(screen)
 
         world.update(view)
@@ -658,11 +658,11 @@ while run:
                 world.player.update_action(Action.RUN)
             else:
                 world.player.update_action(Action.IDLE)
-            world.player.move(view, moving_left, moving_right)
+            world.player.move(view, world, moving_left, moving_right)
             view.bg_scroll -= view.screen_scroll
 
             # check if player has completed the level
-            if world.player.level_complete:
+            if world.player.level_complete(world):
                 intro_fade = create_intro_fade()
                 level += 1
                 view.bg_scroll = 0
@@ -691,7 +691,7 @@ while run:
                     moving_right = True
                 if event.key == pygame.K_SPACE:
                     # shoot bullets
-                    world.player.shoot()
+                    world.player.shoot(world)
                 if event.key == pygame.K_q and world.player.has_grenades:
                     # throw grenades
                     new_grenade = world.player.create_grenade()
