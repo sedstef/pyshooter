@@ -8,6 +8,8 @@ from pygame.sprite import Group
 from pygame.sprite import  spritecollide
 
 import button
+from engine.background import Background
+from engine.background import BG
 from engine.animations import Action
 from engine.animations import ActionAnimation
 from engine.explosion import Explosion
@@ -65,11 +67,6 @@ grenade_fx.set_volume(0.05)
 start_img = pygame.image.load('img/start_btn.png').convert_alpha()
 exit_img = pygame.image.load('img/exit_btn.png').convert_alpha()
 restart_img = pygame.image.load('img/restart_btn.png').convert_alpha()
-# background
-pine1_img = pygame.image.load('img/Background/pine1.png').convert_alpha()
-pine2_img = pygame.image.load('img/Background/pine2.png').convert_alpha()
-mountain_img = pygame.image.load('img/Background/mountain.png').convert_alpha()
-sky_img = pygame.image.load('img/Background/sky_cloud.png').convert_alpha()
 # store tiles in a list
 img_list = []
 for x in range(TILE_TYPES):
@@ -91,7 +88,6 @@ item_boxes = {
 }
 
 # define colours
-BG = (144, 201, 120)
 RED = (255, 0, 0)
 WHITE = (255, 255, 255)
 GREEN = (0, 255, 0)
@@ -100,17 +96,6 @@ PINK = (235, 65, 54)
 
 # define font
 font = pygame.font.SysFont('Futura', 30)
-
-
-def draw_bg(screen: pygame.Surface):
-    screen.fill(BG)
-    width = sky_img.get_width()
-    for x in range(5):
-        screen.blit(sky_img, ((x * width) - view.bg_scroll * 0.5, 0))
-        screen.blit(mountain_img,
-                    ((x * width) - view.bg_scroll * 0.6, screen.get_height() - mountain_img.get_height() - 300))
-        screen.blit(pine1_img, ((x * width) - view.bg_scroll * 0.7, screen.get_height() - pine1_img.get_height() - 150))
-        screen.blit(pine2_img, ((x * width) - view.bg_scroll * 0.8, screen.get_height() - pine2_img.get_height()))
 
 
 class Soldier(pygame.sprite.Sprite):
@@ -621,7 +606,7 @@ start_button = button.Button(view.screen_width // 2 - 130, view.screen_height //
 exit_button = button.Button(view.screen_width // 2 - 110, view.screen_height // 2 + 50, exit_img, 1)
 restart_button = button.Button(view.screen_width // 2 - 100, view.screen_height // 2 - 50, restart_img, 2)
 
-# create sprite groups
+background = Background()
 world = World.load_world(level)
 
 run = True
@@ -639,8 +624,8 @@ while run:
         if exit_button.draw(screen):
             run = False
     else:
-        # update background
-        draw_bg(screen)
+        # update and draw background
+        background.draw(screen, view)
 
         for enemy in world.enemy_group:
             enemy.update(view)
