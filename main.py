@@ -14,8 +14,8 @@ pygame.init()
 
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = int(SCREEN_WIDTH * 0.8)
-
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+
 pygame.display.set_caption('Shooter')
 
 # set framerate
@@ -101,14 +101,14 @@ def draw_text(text, font, text_col, x, y):
     screen.blit(img, (x, y))
 
 
-def draw_bg():
+def draw_bg(screen: pygame.Surface):
     screen.fill(BG)
     width = sky_img.get_width()
     for x in range(5):
         screen.blit(sky_img, ((x * width) - bg_scroll * 0.5, 0))
-        screen.blit(mountain_img, ((x * width) - bg_scroll * 0.6, SCREEN_HEIGHT - mountain_img.get_height() - 300))
-        screen.blit(pine1_img, ((x * width) - bg_scroll * 0.7, SCREEN_HEIGHT - pine1_img.get_height() - 150))
-        screen.blit(pine2_img, ((x * width) - bg_scroll * 0.8, SCREEN_HEIGHT - pine2_img.get_height()))
+        screen.blit(mountain_img, ((x * width) - bg_scroll * 0.6, screen.get_height() - mountain_img.get_height() - 300))
+        screen.blit(pine1_img, ((x * width) - bg_scroll * 0.7, screen.get_height() - pine1_img.get_height() - 150))
+        screen.blit(pine2_img, ((x * width) - bg_scroll * 0.8, screen.get_height() - pine2_img.get_height()))
 
 
 # function to reset level
@@ -155,7 +155,7 @@ class Soldier(pygame.sprite.Sprite):
         if self.shoot_cooldown > 0:
             self.shoot_cooldown -= 1
 
-    def move(self, moving_left, moving_right):
+    def move(self, screen, moving_left, moving_right):
         # reset movement variables
         dx = 0
         dy = 0
@@ -205,12 +205,12 @@ class Soldier(pygame.sprite.Sprite):
             self.health = 0
 
         # check if fallen off the map
-        if self.rect.bottom > SCREEN_HEIGHT:
+        if self.rect.bottom > screen.get_height():
             self.health = 0
 
         # check if going off the edges of the screen
         if self.char_type == 'player':
-            if self.rect.left + dx < 0 or self.rect.right + dx > SCREEN_WIDTH:
+            if self.rect.left + dx < 0 or self.rect.right + dx > screen.get_width():
                 dx = 0
 
         # update rectangle position
@@ -294,7 +294,7 @@ class Enemy(Soldier):
                     else:
                         ai_moving_right = False
                     ai_moving_left = not ai_moving_right
-                    self.move(ai_moving_left, ai_moving_right)
+                    self.move(screen, ai_moving_left, ai_moving_right)
                     self.update_action(Action.RUN)
                     self.move_counter += 1
                     # update AI vision as the enemy moves
@@ -317,13 +317,13 @@ class Player(Soldier):
         Soldier.__init__(self, 'player', x, y, scale, speed, ammo)
         self.grenades = grenades
 
-    def move(self, moving_left, moving_right):
-        dx, dy = super().move(moving_left, moving_right)
+    def move(self, screen: pygame.Surface, moving_left, moving_right):
+        dx, dy = super().move(screen, moving_left, moving_right)
 
         # update scroll based on player position
         scroll = 0
-        if (self.rect.right > SCREEN_WIDTH - SCROLL_THRESH and bg_scroll < (
-                world.level_length * TILE_SIZE) - SCREEN_WIDTH) \
+        if (self.rect.right > screen.get_width() - SCROLL_THRESH and bg_scroll < (
+                world.level_length * TILE_SIZE) - screen.get_width()) \
                 or (self.rect.left < SCROLL_THRESH and bg_scroll > abs(dx)):
             self.rect.x -= dx
             scroll = -dx
@@ -493,11 +493,11 @@ class Bullet(pygame.sprite.Sprite):
         self.rect.center = (x, y)
         self.direction = direction
 
-    def update(self):
+    def update(self, screen: pygame.Surface):
         # move bullet
         self.rect.x += (self.direction * self.speed) + screen_scroll
         # check if bullet has gone off screen
-        if self.rect.right < 0 or self.rect.left > SCREEN_WIDTH:
+        if self.rect.right < 0 or self.rect.left > screen.get_width():
             self.kill()
         # check for collision with level
         for tile in world.obstacle_list:
@@ -612,19 +612,19 @@ class ScreenFade():
         self.speed = speed
         self.fade_counter = 0
 
-    def fade(self):
+    def fade(self, screen: pygame.Surface):
         fade_complete = False
         self.fade_counter += self.speed
         if self.direction == 1:  # whole screen fade
-            pygame.draw.rect(screen, self.colour, (0 - self.fade_counter, 0, SCREEN_WIDTH // 2, SCREEN_HEIGHT))
+            pygame.draw.rect(screen, self.colour, (0 - self.fade_counter, 0, screen.get_width() // 2, screen.get_height()))
             pygame.draw.rect(screen, self.colour,
-                             (SCREEN_WIDTH // 2 + self.fade_counter, 0, SCREEN_WIDTH, SCREEN_HEIGHT))
-            pygame.draw.rect(screen, self.colour, (0, 0 - self.fade_counter, SCREEN_WIDTH, SCREEN_HEIGHT // 2))
+                             (screen.get_width() // 2 + self.fade_counter, 0, screen.get_width(), screen.get_height()))
+            pygame.draw.rect(screen, self.colour, (0, 0 - self.fade_counter, screen.get_width(), screen.get_height() // 2))
             pygame.draw.rect(screen, self.colour,
-                             (0, SCREEN_HEIGHT // 2 + self.fade_counter, SCREEN_WIDTH, SCREEN_HEIGHT))
+                             (0, screen.get_height() // 2 + self.fade_counter, screen.get_width(), screen.get_height()))
         if self.direction == 2:  # vertical screen fade down
-            pygame.draw.rect(screen, self.colour, (0, 0, SCREEN_WIDTH, 0 + self.fade_counter))
-        if self.fade_counter >= SCREEN_WIDTH:
+            pygame.draw.rect(screen, self.colour, (0, 0, screen.get_width(), 0 + self.fade_counter))
+        if self.fade_counter >= screen.get_width():
             fade_complete = True
 
         return fade_complete
@@ -635,9 +635,9 @@ intro_fade = ScreenFade(1, BLACK, 4)
 death_fade = ScreenFade(2, PINK, 4)
 
 # create buttons
-start_button = button.Button(SCREEN_WIDTH // 2 - 130, SCREEN_HEIGHT // 2 - 150, start_img, 1)
-exit_button = button.Button(SCREEN_WIDTH // 2 - 110, SCREEN_HEIGHT // 2 + 50, exit_img, 1)
-restart_button = button.Button(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 - 50, restart_img, 2)
+start_button = button.Button(screen.get_width() // 2 - 130, screen.get_height() // 2 - 150, start_img, 1)
+exit_button = button.Button(screen.get_width() // 2 - 110, screen.get_height() // 2 + 50, exit_img, 1)
+restart_button = button.Button(screen.get_width() // 2 - 100, screen.get_height() // 2 - 50, restart_img, 2)
 
 # create sprite groups
 enemy_group = pygame.sprite.Group()
@@ -667,7 +667,7 @@ while run:
             run = False
     else:
         # update background
-        draw_bg()
+        draw_bg(screen)
         # draw world map
         world.draw()
         # show player health
@@ -689,7 +689,7 @@ while run:
             enemy.draw()
 
         # update and draw groups
-        bullet_group.update()
+        bullet_group.update(screen)
         grenade_group.update()
         explosion_group.update()
         item_box_group.update()
@@ -705,8 +705,8 @@ while run:
         exit_group.draw(screen)
 
         # show intro
-        if start_intro == True:
-            if intro_fade.fade():
+        if start_intro is True:
+            if intro_fade.fade(screen):
                 start_intro = False
                 intro_fade.fade_counter = 0
 
@@ -730,7 +730,7 @@ while run:
                 world.player.update_action(Action.RUN)
             else:
                 world.player.update_action(Action.IDLE)
-            screen_scroll = world.player.move(moving_left, moving_right)
+            screen_scroll = world.player.move(screen, moving_left, moving_right)
             bg_scroll -= screen_scroll
             # check if player has completed the level
             if world.player.level_complete:
@@ -742,7 +742,7 @@ while run:
                     world = World.load_world(level)
         else:
             screen_scroll = 0
-            if death_fade.fade():
+            if death_fade.fade(screen):
                 if restart_button.draw(screen):
                     death_fade.fade_counter = 0
                     start_intro = True
