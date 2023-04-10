@@ -438,27 +438,28 @@ class World:
         self._explosion_group.add(explosion)
 
     def update(self, view: View):
-        self.player.update(view)
+        self._platform.update(view)
+        self._water_group.update(view)
+        self._decoration_group.update(view)
+        self._item_box_group.update(view)
+        self._exit_group.update(view)
+
+        self._player.update(view)
 
         self._bullet_group.update(view)
         self._grenade_group.update(view)
         self._explosion_group.update(view)
 
-        self._item_box_group.update(view)
-        self._decoration_group.update(view)
-        self._water_group.update(view)
-        self._exit_group.update(view)
+
 
     def draw(self, screen: pygame.Surface):
-        for tile in self._platform:
-            tile.rect[0] += view.screen_scroll
-            screen.blit(tile.image, tile.rect)
-
-        self._item_box_group.draw(screen)
-        self._decoration_group.draw(screen)
+        self._platform.draw(screen)
         self._water_group.draw(screen)
+        self._decoration_group.draw(screen)
+        self._item_box_group.draw(screen)
         self._exit_group.draw(screen)
 
+        # TODO self._enemy_group.draw(screen)
         self._player.draw(screen)
 
         self._bullet_group.draw(screen)
