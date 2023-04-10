@@ -273,13 +273,13 @@ class Soldier(pygame.sprite.Sprite):
 
 
 	def ai(self):
-		if self.alive and player.alive:
+		if self.alive and world.player.alive:
 			if self.idling == False and random.randint(1, 200) == 1:
 				self.update_action(0)#0: idle
 				self.idling = True
 				self.idling_counter = 50
 			#check if the ai in near the player
-			if self.vision.colliderect(player.rect):
+			if self.vision.colliderect(world.player.rect):
 				#stop running and face the player
 				self.update_action(0)#0: idle
 				#shoot
@@ -351,6 +351,8 @@ class Soldier(pygame.sprite.Sprite):
 
 class World():
 	def __init__(self):
+		self._player = None
+		self._health_bar = None
 		self.obstacle_list = []
 
 	def process_data(self, data):
@@ -373,8 +375,8 @@ class World():
 						decoration = Decoration(img, x * TILE_SIZE, y * TILE_SIZE)
 						decoration_group.add(decoration)
 					elif tile == 15:#create player
-						player = Soldier('player', x * TILE_SIZE, y * TILE_SIZE, 1.65, 5, 20, 5)
-						self._health_bar = HealthBar(10, 10, player.health, player.health)
+						self._player = Soldier('player', x * TILE_SIZE, y * TILE_SIZE, 1.65, 5, 20, 5)
+						self._health_bar = HealthBar(10, 10, self.player.health, self.player.health)
 					elif tile == 16:#create enemies
 						enemy = Soldier('enemy', x * TILE_SIZE, y * TILE_SIZE, 1.65, 2, 20, 0)
 						enemy_group.add(enemy)
@@ -391,11 +393,14 @@ class World():
 						exit = Exit(img, x * TILE_SIZE, y * TILE_SIZE)
 						exit_group.add(exit)
 
-		return player
 
 	@property
 	def health_bar(self):
 		return self._health_bar
+
+	@property
+	def player(self):
+		return self._player
 
 	def draw(self):
 		for tile in self.obstacle_list:
@@ -448,16 +453,16 @@ class ItemBox(pygame.sprite.Sprite):
 		#scroll
 		self.rect.x += screen_scroll
 		#check if the player has picked up the box
-		if pygame.sprite.collide_rect(self, player):
+		if pygame.sprite.collide_rect(self, world.player):
 			#check what kind of box it was
 			if self.item_type == 'Health':
-				player.health += 25
-				if player.health > player.max_health:
-					player.health = player.max_health
+				world.player.health += 25
+				if world.player.health > world.player.max_health:
+					world.player.health = world.player.max_health
 			elif self.item_type == 'Ammo':
-				player.ammo += 15
+				world.player.ammo += 15
 			elif self.item_type == 'Grenade':
-				player.grenades += 3
+				world.player.grenades += 3
 			#delete the item box
 			self.kill()
 
@@ -500,9 +505,9 @@ class Bullet(pygame.sprite.Sprite):
 				self.kill()
 
 		#check collision with characters
-		if pygame.sprite.spritecollide(player, bullet_group, False):
-			if player.alive:
-				player.health -= 5
+		if pygame.sprite.spritecollide(world.player, bullet_group, False):
+			if world.player.alive:
+				world.player.health -= 5
 				self.kill()
 		for enemy in enemy_group:
 			if pygame.sprite.spritecollide(enemy, bullet_group, False):
@@ -561,9 +566,9 @@ class Grenade(pygame.sprite.Sprite):
 			explosion = Explosion(self.rect.x, self.rect.y, 0.5)
 			explosion_group.add(explosion)
 			#do damage to anyone that is nearby
-			if abs(self.rect.centerx - player.rect.centerx) < TILE_SIZE * 2 and \
-				abs(self.rect.centery - player.rect.centery) < TILE_SIZE * 2:
-				player.health -= 50
+			if abs(self.rect.centerx - world.player.rect.centerx) < TILE_SIZE * 2 and \
+				abs(self.rect.centery - world.player.rect.centery) < TILE_SIZE * 2:
+				world.player.health -= 50
 			for enemy in enemy_group:
 				if abs(self.rect.centerx - enemy.rect.centerx) < TILE_SIZE * 2 and \
 					abs(self.rect.centery - enemy.rect.centery) < TILE_SIZE * 2:
@@ -666,7 +671,7 @@ def load_world_data(level: int):
 
 
 world = World()
-player = world.process_data(load_world_data(level))
+world.process_data(load_world_data(level))
 
 
 
@@ -690,19 +695,19 @@ while run:
 		#draw world map
 		world.draw()
 		#show player health
-		world.health_bar.draw(player.health)
+		world.health_bar.draw(world.player.health)
 		#show ammo
 		draw_text('AMMO: ', font, WHITE, 10, 35)
-		for x in range(player.ammo):
+		for x in range(world.player.ammo):
 			screen.blit(bullet_img, (90 + (x * 10), 40))
 		#show grenades
 		draw_text('GRENADES: ', font, WHITE, 10, 60)
-		for x in range(player.grenades):
+		for x in range(world.player.grenades):
 			screen.blit(grenade_img, (135 + (x * 15), 60))
 
 
-		player.update()
-		player.draw()
+		world.player.update()
+		world.player.draw()
 
 		for enemy in enemy_group:
 			enemy.ai()
@@ -733,25 +738,25 @@ while run:
 
 
 		#update player actions
-		if player.alive:
+		if world.player.alive:
 			#shoot bullets
 			if shoot:
-				player.shoot()
+				world.player.shoot()
 			#throw grenades
-			elif grenade and grenade_thrown == False and player.grenades > 0:
-				grenade = Grenade(player.rect.centerx + (0.5 * player.rect.size[0] * player.direction),\
-				 			player.rect.top, player.direction)
+			elif grenade and grenade_thrown == False and world.player.grenades > 0:
+				grenade = Grenade(world.player.rect.centerx + (0.5 * world.player.rect.size[0] * world.player.direction),\
+				 			world.player.rect.top, world.player.direction)
 				grenade_group.add(grenade)
 				#reduce grenades
-				player.grenades -= 1
+				world.player.grenades -= 1
 				grenade_thrown = True
-			if player.in_air:
-				player.update_action(2)#2: jump
+			if world.player.in_air:
+				world.player.update_action(2)#2: jump
 			elif moving_left or moving_right:
-				player.update_action(1)#1: run
+				world.player.update_action(1)#1: run
 			else:
-				player.update_action(0)#0: idle
-			screen_scroll, level_complete = player.move(moving_left, moving_right)
+				world.player.update_action(0)#0: idle
+			screen_scroll, level_complete = world.player.move(moving_left, moving_right)
 			bg_scroll -= screen_scroll
 			#check if player has completed the level
 			if level_complete:
@@ -762,7 +767,7 @@ while run:
 				if level <= MAX_LEVELS:
 
 					world = World()
-					player = world.process_data(load_world_data(level))
+					world.process_data(load_world_data(level))
 		else:
 			screen_scroll = 0
 			if death_fade.fade():
@@ -772,7 +777,7 @@ while run:
 					bg_scroll = 0
 					reset_level()
 					world = World()
-					player = world.process_data(load_world_data(level))
+					world.process_data(load_world_data(level))
 
 
 	for event in pygame.event.get():
@@ -789,8 +794,8 @@ while run:
 				shoot = True
 			if event.key == pygame.K_q:
 				grenade = True
-			if event.key == pygame.K_w and player.alive:
-				player.jump = True
+			if event.key == pygame.K_w and world.player.alive:
+				world.player.jump = True
 				jump_fx.play()
 			if event.key == pygame.K_ESCAPE:
 				run = False
