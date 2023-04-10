@@ -4,6 +4,7 @@ import os
 import random
 import csv
 import button
+from engine.action import Action
 
 mixer.init()
 pygame.init()
@@ -137,7 +138,7 @@ class Soldier(pygame.sprite.Sprite):
         self.flip = False
         self.animation_list = []
         self.frame_index = 0
-        self.action = 0
+        self.action = Action.IDLE
         self.update_time = pygame.time.get_ticks()
 
         # load all images for the players
@@ -153,7 +154,7 @@ class Soldier(pygame.sprite.Sprite):
                 temp_list.append(img)
             self.animation_list.append(temp_list)
 
-        self.image = self.animation_list[self.action][self.frame_index]
+        self.image = self.animation_list[self.action.value][self.frame_index]
         self.rect = self.image.get_rect()
         self.rect.center = (x, y)
         self.width = self.image.get_width()
@@ -251,19 +252,19 @@ class Soldier(pygame.sprite.Sprite):
         # update animation
         ANIMATION_COOLDOWN = 100
         # update image depending on current frame
-        self.image = self.animation_list[self.action][self.frame_index]
+        self.image = self.animation_list[self.action.value][self.frame_index]
         # check if enough time has passed since the last update
         if pygame.time.get_ticks() - self.update_time > ANIMATION_COOLDOWN:
             self.update_time = pygame.time.get_ticks()
             self.frame_index += 1
         # if the animation has run out the reset back to the start
-        if self.frame_index >= len(self.animation_list[self.action]):
-            if self.action == 3:
-                self.frame_index = len(self.animation_list[self.action]) - 1
+        if self.frame_index >= len(self.animation_list[self.action.value]):
+            if Action.DEATH == self.action:
+                self.frame_index = len(self.animation_list[self.action.value]) - 1
             else:
                 self.frame_index = 0
 
-    def update_action(self, new_action):
+    def update_action(self, new_action: Action):
         # check if the new action is different to the previous one
         if new_action != self.action:
             self.action = new_action
@@ -275,7 +276,7 @@ class Soldier(pygame.sprite.Sprite):
         if self.health <= 0:
             self.health = 0
             self.speed = 0
-            self.update_action(3)
+            self.update_action(Action.DEATH)
 
     @property
     def alive(self) -> bool:
@@ -306,13 +307,13 @@ class Enemy(Soldier):
     def ai(self):
         if self.alive and world.player.alive:
             if self.idling is False and random.randint(1, 200) == 1:
-                self.update_action(0)  # 0: idle
+                self.update_action(Action.IDLE)
                 self.idling = True
                 self.idling_counter = 50
             # check if the AI in near the player
             if self.vision.colliderect(world.player.rect):
                 # stop running and face the player
-                self.update_action(0)  # 0: idle
+                self.update_action(Action.IDLE)
                 # shoot
                 self.shoot()
             else:
@@ -323,7 +324,7 @@ class Enemy(Soldier):
                         ai_moving_right = False
                     ai_moving_left = not ai_moving_right
                     self.move(ai_moving_left, ai_moving_right)
-                    self.update_action(1)  # 1: run
+                    self.update_action(Action.RUN)
                     self.move_counter += 1
                     # update AI vision as the enemy moves
                     self.vision.center = (self.rect.centerx + 75 * self.direction, self.rect.centery)
@@ -752,11 +753,11 @@ while run:
                 world.player.grenades -= 1
                 grenade_thrown = True
             if world.player.in_air:
-                world.player.update_action(2)  # 2: jump
+                world.player.update_action(Action.JUMP)
             elif moving_left or moving_right:
-                world.player.update_action(1)  # 1: run
+                world.player.update_action(Action.RUN)
             else:
-                world.player.update_action(0)  # 0: idle
+                world.player.update_action(Action.IDLE)
             screen_scroll = world.player.move(moving_left, moving_right)
             bg_scroll -= screen_scroll
             # check if player has completed the level
