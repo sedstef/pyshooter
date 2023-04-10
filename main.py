@@ -123,7 +123,6 @@ def reset_level():
     bullet_group.empty()
     grenade_group.empty()
     explosion_group.empty()
-    item_box_group.empty()
 
 
 class Soldier(pygame.sprite.Sprite):
@@ -368,6 +367,7 @@ class World:
         self._decoration_group = pygame.sprite.Group()
         self._water_group = pygame.sprite.Group()
         self._exit_group = pygame.sprite.Group()
+        self._item_box_group = pygame.sprite.Group()
 
     def process_data(self, data):
         self.level_length = len(data[0])
@@ -392,14 +392,11 @@ class World:
                     elif tile == 16:  # create enemies
                         enemy_group.add(Enemy(x * TILE_SIZE, y * TILE_SIZE, 1.65, 2, 20))
                     elif tile == 17:  # create ammo box
-                        item_box = ItemBox(img, img_rect, 'Ammo')
-                        item_box_group.add(item_box)
+                        self._item_box_group.add(ItemBox(img, img_rect, 'Ammo'))
                     elif tile == 18:  # create grenade box
-                        item_box = ItemBox(img, img_rect, 'Grenade')
-                        item_box_group.add(item_box)
+                        self._item_box_group.add(ItemBox(img, img_rect, 'Grenade'))
                     elif tile == 19:  # create health box
-                        item_box = ItemBox(img, img_rect, 'Health')
-                        item_box_group.add(item_box)
+                        self._item_box_group.add(ItemBox(img, img_rect, 'Health'))
                     elif tile == 20:  # create exit
                         self._exit_group.add(Tile(img, img_rect))
 
@@ -418,6 +415,9 @@ class World:
     @property
     def exit_group(self):
         return self._exit_group
+    @property
+    def item_box_group(self):
+        return self._item_box_group
 
     @property
     def health_bar(self):
@@ -590,7 +590,6 @@ enemy_group = pygame.sprite.Group()
 bullet_group = pygame.sprite.Group()
 grenade_group = pygame.sprite.Group()
 explosion_group = pygame.sprite.Group()
-item_box_group = pygame.sprite.Group()
 
 world = World.load_world(level)
 
@@ -622,7 +621,7 @@ while run:
         bullet_group.update(view)
         grenade_group.update(view)
         explosion_group.update(view)
-        item_box_group.update(view)
+        world.item_box_group.update(view)
         world.decoration_group.update(view)
         world.water_group.update(view)
         world.exit_group.update(view)
@@ -630,7 +629,7 @@ while run:
         bullet_group.draw(screen)
         grenade_group.draw(screen)
         explosion_group.draw(screen)
-        item_box_group.draw(screen)
+        world.item_box_group.draw(screen)
         world.decoration_group.draw(screen)
         world.water_group.draw(screen)
         world.exit_group.draw(screen)
