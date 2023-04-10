@@ -117,13 +117,6 @@ def draw_bg(screen: pygame.Surface):
         screen.blit(pine2_img, ((x * width) - bg_scroll * 0.8, screen.get_height() - pine2_img.get_height()))
 
 
-# function to reset level
-def reset_level():
-    bullet_group.empty()
-    grenade_group.empty()
-    explosion_group.empty()
-
-
 class Soldier(pygame.sprite.Sprite):
     def __init__(self, char_type: string, x, y, scale, speed, ammo):
         pygame.sprite.Sprite.__init__(self)
@@ -232,7 +225,7 @@ class Soldier(pygame.sprite.Sprite):
             self.shoot_cooldown = 20
             bullet = Bullet(self.rect.centerx + (0.75 * self.rect.size[0] * self.direction), self.rect.centery,
                             self.direction)
-            bullet_group.add(bullet)
+            world.add_bullet(bullet)
             # reduce ammo
             self.ammo -= 1
             shot_fx.play()
@@ -368,6 +361,10 @@ class World:
         self._exit_group = pygame.sprite.Group()
         self._item_box_group = pygame.sprite.Group()
         self._enemy_group = pygame.sprite.Group()
+        # dynamic stuff
+        self._bullet_group = pygame.sprite.Group()
+        self._grenade_group = pygame.sprite.Group()
+        self._explosion_group = pygame.sprite.Group()
 
     def process_data(self, data):
         self.level_length = len(data[0])
@@ -381,7 +378,7 @@ class World:
                     img_rect.y = y * TILE_SIZE
                     tile_data = (img, img_rect)
                     if tile >= 0 and tile <= 8:
-                        self._platform.add(Tile(img,img_rect))
+                        self._platform.add(Tile(img, img_rect))
                     elif tile >= 9 and tile <= 10:
                         self._water_group.add(Tile(img, img_rect))
                     elif tile >= 11 and tile <= 14:
@@ -425,12 +422,25 @@ class World:
         return self._enemy_group
 
     @property
+    def bullet_group(self):
+        return self._bullet_group
+
+    @property
     def health_bar(self):
         return self._health_bar
 
     @property
     def player(self):
         return self._player
+
+    def add_bullet(self, bullet):
+        self._bullet_group.add(bullet)
+
+    def add_grenade(self, grenade):
+        self._grenade_group.add(grenade)
+
+    def add_explosion(self, explosion):
+        self._explosion_group.add(explosion)
 
     def draw(self, screen: pygame.Surface):
         for tile in self.platform:
@@ -451,6 +461,25 @@ class World:
 
         self.player.update(view)
         self.player.draw(screen)
+
+    def update(self, view: View):
+        self._bullet_group.update(view)
+        self._grenade_group.update(view)
+        self._explosion_group.update(view)
+
+        self._item_box_group.update(view)
+        self._decoration_group.update(view)
+        self._water_group.update(view)
+        self._exit_group.update(view)
+
+    def draw2(self, screen: pygame.Surface):
+        self._bullet_group.draw(screen)
+        self._grenade_group.draw(screen)
+        self._explosion_group.draw(screen)
+        self._item_box_group.draw(screen)
+        self._decoration_group.draw(screen)
+        self._water_group.draw(screen)
+        self._exit_group.draw(screen)
 
 
 class ItemBox(pygame.sprite.Sprite):
@@ -514,12 +543,12 @@ class Bullet(pygame.sprite.Sprite):
             self.kill()
 
         # check collision with characters
-        if pygame.sprite.spritecollide(world.player, bullet_group, False):
+        if pygame.sprite.spritecollide(world.player, world.bullet_group, False):
             if world.player.alive:
                 world.player.health -= 5
                 self.kill()
         for enemy in world.enemy_group:
-            if pygame.sprite.spritecollide(enemy, bullet_group, False):
+            if pygame.sprite.spritecollide(enemy, world.bullet_group, False):
                 if enemy.alive:
                     enemy.health -= 25
                     self.kill()
@@ -570,7 +599,7 @@ class Grenade(pygame.sprite.Sprite):
         if self.timer <= 0:
             self.kill()
             grenade_fx.play()
-            explosion_group.add(Explosion(self.rect.x, self.rect.y, 0.5))
+            world.add_explosion(Explosion(self.rect.x, self.rect.y, 0.5))
             # do damage to anyone that is nearby
             if abs(self.rect.centerx - world.player.rect.centerx) < TILE_SIZE * 2 and \
                     abs(self.rect.centery - world.player.rect.centery) < TILE_SIZE * 2:
@@ -591,10 +620,6 @@ exit_button = button.Button(view.screen_width // 2 - 110, view.screen_height // 
 restart_button = button.Button(view.screen_width // 2 - 100, view.screen_height // 2 - 50, restart_img, 2)
 
 # create sprite groups
-bullet_group = pygame.sprite.Group()
-grenade_group = pygame.sprite.Group()
-explosion_group = pygame.sprite.Group()
-
 world = World.load_world(level)
 
 run = True
@@ -621,21 +646,9 @@ while run:
             enemy.update(view)
             enemy.draw(screen)
 
-        bullet_group.update(view)
-        grenade_group.update(view)
-        explosion_group.update(view)
-        world.item_box_group.update(view)
-        world.decoration_group.update(view)
-        world.water_group.update(view)
-        world.exit_group.update(view)
+        world.update(view)
 
-        bullet_group.draw(screen)
-        grenade_group.draw(screen)
-        explosion_group.draw(screen)
-        world.item_box_group.draw(screen)
-        world.decoration_group.draw(screen)
-        world.water_group.draw(screen)
-        world.exit_group.draw(screen)
+        world.draw2(screen)
 
         # show intro
         if start_intro is True:
@@ -651,7 +664,7 @@ while run:
             # throw grenades
             elif grenade and grenade_thrown is False and world.player.grenades > 0:
                 new_grenade = world.player.create_grenade()
-                grenade_group.add(new_grenade)
+                world.add_grenade(new_grenade)
                 grenade_thrown = True
             if world.player.in_air:
                 world.player.update_action(Action.JUMP)
@@ -666,7 +679,6 @@ while run:
                 start_intro = True
                 level += 1
                 bg_scroll = 0
-                reset_level()
                 if level <= MAX_LEVELS:
                     world = World.load_world(level)
         else:
@@ -676,7 +688,6 @@ while run:
                     death_fade.fade_counter = 0
                     start_intro = True
                     bg_scroll = 0
-                    reset_level()
                     world = World.load_world(level)
 
     for event in pygame.event.get():
