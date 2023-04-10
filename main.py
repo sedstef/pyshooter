@@ -169,7 +169,6 @@ class Soldier(pygame.sprite.Sprite):
 
     def move(self, moving_left, moving_right):
         # reset movement variables
-        screen_scroll = 0
         dx = 0
         dy = 0
 
@@ -217,11 +216,6 @@ class Soldier(pygame.sprite.Sprite):
         if pygame.sprite.spritecollide(self, water_group, False):
             self.health = 0
 
-        # check for collision with exit
-        level_complete = False
-        if pygame.sprite.spritecollide(self, exit_group, False):
-            level_complete = True
-
         # check if fallen off the map
         if self.rect.bottom > SCREEN_HEIGHT:
             self.health = 0
@@ -234,16 +228,12 @@ class Soldier(pygame.sprite.Sprite):
         # update rectangle position
         self.rect.x += dx
         self.rect.y += dy
+        return dx, dy
 
-        # update scroll based on player position
-        if self.char_type == 'player':
-            if (self.rect.right > SCREEN_WIDTH - SCROLL_THRESH and bg_scroll < (
-                    world.level_length * TILE_SIZE) - SCREEN_WIDTH) \
-                    or (self.rect.left < SCROLL_THRESH and bg_scroll > abs(dx)):
-                self.rect.x -= dx
-                screen_scroll = -dx
-
-        return screen_scroll, level_complete
+    @property
+    def level_complete(self):
+        # check for collision with exit
+        return pygame.sprite.spritecollide(self, exit_group, False)
 
     def collision_x(self):
         pass
@@ -348,8 +338,27 @@ class Enemy(Soldier):
         self.rect.x += screen_scroll
 
 
+class Player(Soldier):
+    def __init__(self, x, y, scale, speed, ammo, grenades):
+        Soldier.__init__(self, 'player', x, y, scale, speed, ammo, grenades)
+
+    def move(self, moving_left, moving_right):
+        dx, dy = super().move(moving_left, moving_right)
+
+        # update scroll based on player position
+        scroll = 0
+        if (self.rect.right > SCREEN_WIDTH - SCROLL_THRESH and bg_scroll < (
+                world.level_length * TILE_SIZE) - SCREEN_WIDTH) \
+                or (self.rect.left < SCROLL_THRESH and bg_scroll > abs(dx)):
+            self.rect.x -= dx
+            scroll = -dx
+
+        return scroll
+
+
 class World:
 
+    @staticmethod
     def load_world(level: int):
         # create empty tile list
         data = []
@@ -393,7 +402,7 @@ class World:
                         decoration = Decoration(img, x * TILE_SIZE, y * TILE_SIZE)
                         decoration_group.add(decoration)
                     elif tile == 15:  # create player
-                        self._player = Soldier('player', x * TILE_SIZE, y * TILE_SIZE, 1.65, 5, 20, 5)
+                        self._player = Player(x * TILE_SIZE, y * TILE_SIZE, 1.65, 5, 20, 5)
                         self._health_bar = HealthBar(10, 10, self.player.health, self.player.health)
                     elif tile == 16:  # create enemies
                         enemy_group.add(Enemy(x * TILE_SIZE, y * TILE_SIZE, 1.65, 2, 20, 0))
@@ -746,10 +755,10 @@ while run:
                 world.player.update_action(1)  # 1: run
             else:
                 world.player.update_action(0)  # 0: idle
-            screen_scroll, level_complete = world.player.move(moving_left, moving_right)
+            screen_scroll = world.player.move(moving_left, moving_right)
             bg_scroll -= screen_scroll
             # check if player has completed the level
-            if level_complete:
+            if world.player.level_complete:
                 start_intro = True
                 level += 1
                 bg_scroll = 0
