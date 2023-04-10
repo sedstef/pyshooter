@@ -189,22 +189,22 @@ class Soldier(pygame.sprite.Sprite):
         dy += self.vel_y
 
         # check for collision
-        for tile in world.obstacle_list:
+        for tile in world.platform:
             # check collision in the x direction
-            if tile[1].colliderect(self.rect.x + dx, self.rect.y, self.width, self.height):
+            if tile.rect.colliderect(self.rect.x + dx, self.rect.y, self.width, self.height):
                 dx = 0
                 self.collision_x()
             # check for collision in the y direction
-            if tile[1].colliderect(self.rect.x, self.rect.y + dy, self.width, self.height):
+            if tile.rect.colliderect(self.rect.x, self.rect.y + dy, self.width, self.height):
                 # check if below the ground, i.e. jumping
                 if self.vel_y < 0:
                     self.vel_y = 0
-                    dy = tile[1].bottom - self.rect.top
+                    dy = tile.rect.bottom - self.rect.top
                 # check if above the ground, i.e. falling
                 elif self.vel_y >= 0:
                     self.vel_y = 0
                     self.in_air = False
-                    dy = tile[1].top - self.rect.bottom
+                    dy = tile.rect.top - self.rect.bottom
 
         # check for collision with water
         if pygame.sprite.spritecollide(self, water_group, False):
@@ -367,7 +367,7 @@ class World:
     def __init__(self):
         self._player = None
         self._health_bar = None
-        self.obstacle_list = []
+        self._platform = pygame.sprite.Group()
 
     def process_data(self, data):
         self.level_length = len(data[0])
@@ -381,7 +381,7 @@ class World:
                     img_rect.y = y * TILE_SIZE
                     tile_data = (img, img_rect)
                     if tile >= 0 and tile <= 8:
-                        self.obstacle_list.append(tile_data)
+                        self._platform.add(Tile(img,img_rect))
                     elif tile >= 9 and tile <= 10:
                         water_group.add(Tile(img, img_rect))
                     elif tile >= 11 and tile <= 14:
@@ -404,6 +404,10 @@ class World:
                         exit_group.add(Tile(img, img_rect))
 
     @property
+    def platform(self):
+        return self._platform
+
+    @property
     def health_bar(self):
         return self._health_bar
 
@@ -412,9 +416,9 @@ class World:
         return self._player
 
     def draw(self, screen: pygame.Surface):
-        for tile in self.obstacle_list:
-            tile[1][0] += view.screen_scroll
-            screen.blit(tile[0], tile[1])
+        for tile in self.platform:
+            tile.rect[0] += view.screen_scroll
+            screen.blit(tile.image, tile.rect)
 
         # show player health
         self.health_bar.draw(screen)
@@ -487,10 +491,10 @@ class Bullet(pygame.sprite.Sprite):
         # check if bullet has gone off screen
         if self.rect.right < 0 or self.rect.left > view.screen_width:
             self.kill()
+
         # check for collision with level
-        for tile in world.obstacle_list:
-            if tile[1].colliderect(self.rect):
-                self.kill()
+        if pygame.sprite.spritecollide(self, world.platform, False):
+            self.kill()
 
         # check collision with characters
         if pygame.sprite.spritecollide(world.player, bullet_group, False):
@@ -523,22 +527,22 @@ class Grenade(pygame.sprite.Sprite):
         dy = self.vel_y
 
         # check for collision with level
-        for tile in world.obstacle_list:
+        for tile in world.platform:
             # check collision with walls
-            if tile[1].colliderect(self.rect.x + dx, self.rect.y, self.width, self.height):
+            if tile.rect.colliderect(self.rect.x + dx, self.rect.y, self.width, self.height):
                 self.direction *= -1
                 dx = self.direction * self.speed
             # check for collision in the y direction
-            if tile[1].colliderect(self.rect.x, self.rect.y + dy, self.width, self.height):
+            if tile.rect.colliderect(self.rect.x, self.rect.y + dy, self.width, self.height):
                 self.speed = 0
                 # check if below the ground, i.e. thrown up
                 if self.vel_y < 0:
                     self.vel_y = 0
-                    dy = tile[1].bottom - self.rect.top
+                    dy = tile.rect.bottom - self.rect.top
                 # check if above the ground, i.e. falling
                 elif self.vel_y >= 0:
                     self.vel_y = 0
-                    dy = tile[1].top - self.rect.bottom
+                    dy = tile.rect.top - self.rect.bottom
 
         # update grenade position
         self.rect.x += dx + view.screen_scroll
