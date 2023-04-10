@@ -385,7 +385,7 @@ class World:
                         decoration_group.add(decoration)
                     elif tile == 15:  # create player
                         self._player = Player(x * TILE_SIZE, y * TILE_SIZE, 1.65, 5, 20, 5)
-                        self._health_bar = HealthBar(10, 10, self.player.health, self.player.health)
+                        self._health_bar = HealthBar(10, 10, self.player)
                     elif tile == 16:  # create enemies
                         enemy_group.add(Enemy(x * TILE_SIZE, y * TILE_SIZE, 1.65, 2, 20))
                     elif tile == 17:  # create ammo box
@@ -409,10 +409,13 @@ class World:
     def player(self):
         return self._player
 
-    def draw(self):
+    def draw(self, screen: pygame.Surface):
         for tile in self.obstacle_list:
             tile[1][0] += screen_scroll
             screen.blit(tile[0], tile[1])
+
+        # show player health
+        self.health_bar.draw(screen)
 
 
 class Decoration(pygame.sprite.Sprite):
@@ -475,17 +478,15 @@ class ItemBox(pygame.sprite.Sprite):
 
 
 class HealthBar:
-    def __init__(self, x, y, health, max_health):
+    def __init__(self, x, y, player: Player):
         self.x = x
         self.y = y
-        self.health = health
-        self.max_health = max_health
+        self.player = player
+        self.max_health = player.health
 
-    def draw(self, health):
-        # update with new health
-        self.health = health
+    def draw(self, screen: pygame.Surface):
         # calculate health ratio
-        ratio = self.health / self.max_health
+        ratio = self.player.health / self.max_health
         pygame.draw.rect(screen, BLACK, (self.x - 2, self.y - 2, 154, 24))
         pygame.draw.rect(screen, RED, (self.x, self.y, 150, 20))
         pygame.draw.rect(screen, GREEN, (self.x, self.y, 150 * ratio, 20))
@@ -618,9 +619,8 @@ while run:
         # update background
         draw_bg(screen)
         # draw world map
-        world.draw()
-        # show player health
-        world.health_bar.draw(world.player.health)
+        world.draw(screen)
+
         # show ammo
         draw_text('AMMO: ', font, WHITE, 10, 35)
         for x in range(world.player.ammo):
