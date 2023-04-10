@@ -5,7 +5,7 @@ import string
 import pygame
 from pygame import mixer
 from pygame.sprite import Group
-from pygame.sprite import  spritecollide
+from pygame.sprite import spritecollide
 
 import button
 from engine.background import Background
@@ -434,8 +434,6 @@ class World:
         self._bullet_group.update(view)
         self._grenade_group.update(view)
         self._explosion_group.update(view)
-
-
 
     def draw(self, screen: pygame.Surface):
         self._platform.draw(screen)
