@@ -404,11 +404,9 @@ def load_level(level: int):
                 if tile >= 0 and tile <= 8:
                     obstacle_list.append(tile_data)
                 elif tile >= 9 and tile <= 10:
-                    water = Water(img, x * TILE_SIZE, y * TILE_SIZE)
-                    water_group.add(water)
+                    water_group.add(Tile(img, img_rect))
                 elif tile >= 11 and tile <= 14:
-                    decoration = Decoration(img, x * TILE_SIZE, y * TILE_SIZE)
-                    decoration_group.add(decoration)
+                    decoration_group.add(Tile(img, img_rect))
                 elif tile == 15:  # create player
                     player = Player('player', x * TILE_SIZE, y * TILE_SIZE, 1.65, 5, 20, 5)
                     health_bar = HealthBar(10, 10, player.health, player.health)
@@ -427,8 +425,7 @@ def load_level(level: int):
                                        y * TILE_SIZE)
                     item_box_group.add(item_box)
                 elif tile == 20:  # create exit
-                    exit = Exit(img, x * TILE_SIZE, y * TILE_SIZE)
-                    exit_group.add(exit)
+                    exit_group.add(Tile(img, img_rect))
 
     return player, health_bar
 
@@ -439,27 +436,14 @@ def draw_world():
         screen.blit(tile[0], tile[1])
 
 
-class Decoration(ScrollSprite):
-    def __init__(self, image, x, y):
-        super().__init__(image, image.get_rect())
-        self.rect.midtop = (x + TILE_SIZE // 2, y + (TILE_SIZE - self.image.get_height()))
-
-
-class Water(ScrollSprite):
-    def __init__(self, image, x, y):
-        super().__init__(image,image.get_rect())
-        self.rect.midtop = (x + TILE_SIZE // 2, y + (TILE_SIZE - self.image.get_height()))
-
-
-class Exit(ScrollSprite):
-    def __init__(self, image, x, y):
-        super().__init__(image,image.get_rect())
-        self.rect.midtop = (x + TILE_SIZE // 2, y + (TILE_SIZE - self.image.get_height()))
+class Tile(ScrollSprite):
+    def __init__(self, image, rect):
+        super().__init__(image, rect)
 
 
 class ItemBox(ScrollSprite):
     def __init__(self, item_type: ItemType, collector, x, y):
-        super().__init__(item_type.get_image(),item_type.get_image().get_rect())
+        super().__init__(item_type.get_image(), item_type.get_image().get_rect())
         self.item_type = item_type
         self._collector = collector
         self.rect.midtop = (x + TILE_SIZE // 2, y + (TILE_SIZE - self.image.get_height()))
@@ -526,7 +510,7 @@ class Bullet(ScrollSprite):
 
 class Grenade(ScrollSprite):
     def __init__(self, x, y, direction):
-        super().__init__(grenade_img,grenade_img.get_rect())
+        super().__init__(grenade_img, grenade_img.get_rect())
         self.timer = 100
         self.vel_y = -11
         self.speed = 7
@@ -582,7 +566,7 @@ class Grenade(ScrollSprite):
 
 class Explosion(ScrollSprite):
     def __init__(self, x, y, scale):
-        #TODO init ScrollSprite
+        # TODO init ScrollSprite
         pygame.sprite.Sprite.__init__(self)
         self.images = []
         for num in range(1, 6):
