@@ -122,8 +122,10 @@ def draw_bg():
 
 class ScrollSprite(Sprite):
 
-    def __init__(self):
+    def __init__(self, image, rect):
         pygame.sprite.Sprite.__init__(self)
+        self.image = image
+        self.rect = rect
 
     def update(self):
         self.rect.x += screen_scroll
@@ -131,6 +133,7 @@ class ScrollSprite(Sprite):
 
 class Soldier(ScrollSprite):
     def __init__(self, char_type, x, y, scale, speed, ammo, grenades):
+        # TODO init ScrollSprite
         pygame.sprite.Sprite.__init__(self)
         self.alive = True
         self.char_type = char_type
@@ -344,6 +347,23 @@ class Soldier(ScrollSprite):
         screen.blit(pygame.transform.flip(self.image, self.flip, False), self.rect)
 
 
+class Player(Soldier):
+
+    def __init__(self, char_type, x, y, scale, speed, ammo, grenades):
+        super().__init__(char_type, x, y, scale, speed, ammo, grenades)
+
+    def add_health(self):
+        self.health += 25
+        if self.health > self.max_health:
+            self.health = self.max_health
+
+    def add_ammo(self):
+        self.ammo += 15
+
+    def add_grenade(self):
+        self.grenades += 3
+
+
 # function to reset level
 def reset_level():
     enemy_group.empty()
@@ -390,19 +410,21 @@ def load_level(level: int):
                     decoration = Decoration(img, x * TILE_SIZE, y * TILE_SIZE)
                     decoration_group.add(decoration)
                 elif tile == 15:  # create player
-                    player = Soldier('player', x * TILE_SIZE, y * TILE_SIZE, 1.65, 5, 20, 5)
+                    player = Player('player', x * TILE_SIZE, y * TILE_SIZE, 1.65, 5, 20, 5)
                     health_bar = HealthBar(10, 10, player.health, player.health)
                 elif tile == 16:  # create enemies
                     enemy = Soldier('enemy', x * TILE_SIZE, y * TILE_SIZE, 1.65, 2, 20, 0)
                     enemy_group.add(enemy)
                 elif tile == 17:  # create ammo box
-                    item_box = ItemBox(ItemType.AMMO, x * TILE_SIZE, y * TILE_SIZE)
+                    item_box = ItemBox(ItemType.AMMO, lambda player: player.add_ammo(), x * TILE_SIZE, y * TILE_SIZE)
                     item_box_group.add(item_box)
                 elif tile == 18:  # create grenade box
-                    item_box = ItemBox(ItemType.GRENADE, x * TILE_SIZE, y * TILE_SIZE)
+                    item_box = ItemBox(ItemType.GRENADE, lambda player: player.add_grenade(), x * TILE_SIZE,
+                                       y * TILE_SIZE)
                     item_box_group.add(item_box)
                 elif tile == 19:  # create health box
-                    item_box = ItemBox(ItemType.HEALTH, x * TILE_SIZE, y * TILE_SIZE)
+                    item_box = ItemBox(ItemType.HEALTH, lambda player: player.add_health(), x * TILE_SIZE,
+                                       y * TILE_SIZE)
                     item_box_group.add(item_box)
                 elif tile == 20:  # create exit
                     exit = Exit(img, x * TILE_SIZE, y * TILE_SIZE)
@@ -418,35 +440,28 @@ def draw_world():
 
 
 class Decoration(ScrollSprite):
-    def __init__(self, img, x, y):
-        pygame.sprite.Sprite.__init__(self)
-        self.image = img
-        self.rect = self.image.get_rect()
+    def __init__(self, image, x, y):
+        super().__init__(image, image.get_rect())
         self.rect.midtop = (x + TILE_SIZE // 2, y + (TILE_SIZE - self.image.get_height()))
 
 
 class Water(ScrollSprite):
-    def __init__(self, img, x, y):
-        pygame.sprite.Sprite.__init__(self)
-        self.image = img
-        self.rect = self.image.get_rect()
+    def __init__(self, image, x, y):
+        super().__init__(image,image.get_rect())
         self.rect.midtop = (x + TILE_SIZE // 2, y + (TILE_SIZE - self.image.get_height()))
 
 
 class Exit(ScrollSprite):
-    def __init__(self, img, x, y):
-        pygame.sprite.Sprite.__init__(self)
-        self.image = img
-        self.rect = self.image.get_rect()
+    def __init__(self, image, x, y):
+        super().__init__(image,image.get_rect())
         self.rect.midtop = (x + TILE_SIZE // 2, y + (TILE_SIZE - self.image.get_height()))
 
 
 class ItemBox(ScrollSprite):
-    def __init__(self, item_type: ItemType, x, y):
-        pygame.sprite.Sprite.__init__(self)
+    def __init__(self, item_type: ItemType, collector, x, y):
+        super().__init__(item_type.get_image(),item_type.get_image().get_rect())
         self.item_type = item_type
-        self.image = item_type.get_image()
-        self.rect = self.image.get_rect()
+        self._collector = collector
         self.rect.midtop = (x + TILE_SIZE // 2, y + (TILE_SIZE - self.image.get_height()))
 
     def update(self):
@@ -454,15 +469,9 @@ class ItemBox(ScrollSprite):
 
         # check if the player has picked up the box
         if pygame.sprite.collide_rect(self, player):
-            # check what kind of box it was
-            if self.item_type == ItemType.HEALTH:
-                player.health += 25
-                if player.health > player.max_health:
-                    player.health = player.max_health
-            elif self.item_type == ItemType.AMMO:
-                player.ammo += 15
-            elif self.item_type == ItemType.GRENADE:
-                player.grenades += 3
+            # collect the item
+            self._collector(player)
+
             # delete the item box
             self.kill()
 
@@ -486,10 +495,8 @@ class HealthBar():
 
 class Bullet(ScrollSprite):
     def __init__(self, x, y, direction):
-        pygame.sprite.Sprite.__init__(self)
+        super().__init__(bullet_img, bullet_img.get_rect())
         self.speed = 10
-        self.image = bullet_img
-        self.rect = self.image.get_rect()
         self.rect.center = (x, y)
         self.direction = direction
 
@@ -519,12 +526,10 @@ class Bullet(ScrollSprite):
 
 class Grenade(ScrollSprite):
     def __init__(self, x, y, direction):
-        pygame.sprite.Sprite.__init__(self)
+        super().__init__(grenade_img,grenade_img.get_rect())
         self.timer = 100
         self.vel_y = -11
         self.speed = 7
-        self.image = grenade_img
-        self.rect = self.image.get_rect()
         self.rect.center = (x, y)
         self.width = self.image.get_width()
         self.height = self.image.get_height()
@@ -577,6 +582,7 @@ class Grenade(ScrollSprite):
 
 class Explosion(ScrollSprite):
     def __init__(self, x, y, scale):
+        #TODO init ScrollSprite
         pygame.sprite.Sprite.__init__(self)
         self.images = []
         for num in range(1, 6):
