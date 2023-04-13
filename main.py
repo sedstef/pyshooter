@@ -31,6 +31,7 @@ MAX_LEVELS = 3
 screen_scroll = 0
 bg_scroll = 0
 level = 1
+level_length = 0
 start_game = False
 start_intro = False
 
@@ -108,35 +109,6 @@ def draw_bg():
         screen.blit(pine1_img, ((x * width) - bg_scroll * 0.7, SCREEN_HEIGHT - pine1_img.get_height() - 150))
         screen.blit(pine2_img, ((x * width) - bg_scroll * 0.8, SCREEN_HEIGHT - pine2_img.get_height()))
 
-
-# function to reset level
-def reset_level():
-    enemy_group.empty()
-    bullet_group.empty()
-    grenade_group.empty()
-    explosion_group.empty()
-    item_box_group.empty()
-    decoration_group.empty()
-    water_group.empty()
-    exit_group.empty()
-
-
-def load_level(level: int):
-    # create empty tile list
-    _data = []
-    for row in range(ROWS):
-        r = [-1] * COLS
-        _data.append(r)
-
-    # load in level data and create world
-    with open(f'level{level}_data.csv', newline='') as csvfile:
-        reader = csv.reader(csvfile, delimiter=',')
-        for x, row in enumerate(reader):
-            for y, tile in enumerate(row):
-                _data[x][y] = int(tile)
-    _world = World()
-    _player, _health_bar = _world.process_data(_data)
-    return _world, _player, _health_bar
 
 
 class Soldier(pygame.sprite.Sprite):
@@ -221,7 +193,7 @@ class Soldier(pygame.sprite.Sprite):
         dy += self.vel_y
 
         # check for collision
-        for tile in world.obstacle_list:
+        for tile in obstacle_list:
             # check collision in the x direction
             if tile[1].colliderect(self.rect.x + dx, self.rect.y, self.width, self.height):
                 dx = 0
@@ -266,7 +238,7 @@ class Soldier(pygame.sprite.Sprite):
         # update scroll based on player position
         if self.char_type == 'player':
             if (self.rect.right > SCREEN_WIDTH - SCROLL_THRESH and bg_scroll < (
-                    world.level_length * TILE_SIZE) - SCREEN_WIDTH) \
+                    level_length * TILE_SIZE) - SCREEN_WIDTH) \
                     or (self.rect.left < SCROLL_THRESH and bg_scroll > abs(dx)):
                 self.rect.x -= dx
                 screen_scroll = -dx
@@ -354,54 +326,78 @@ class Soldier(pygame.sprite.Sprite):
         screen.blit(pygame.transform.flip(self.image, self.flip, False), self.rect)
 
 
-class World():
-    def __init__(self):
-        self.obstacle_list = []
 
-    def process_data(self, data):
-        self.level_length = len(data[0])
-        # iterate through each value in level data file
-        for y, row in enumerate(data):
-            for x, tile in enumerate(row):
-                if tile >= 0:
-                    img = img_list[tile]
-                    img_rect = img.get_rect()
-                    img_rect.x = x * TILE_SIZE
-                    img_rect.y = y * TILE_SIZE
-                    tile_data = (img, img_rect)
-                    if tile >= 0 and tile <= 8:
-                        self.obstacle_list.append(tile_data)
-                    elif tile >= 9 and tile <= 10:
-                        water = Water(img, x * TILE_SIZE, y * TILE_SIZE)
-                        water_group.add(water)
-                    elif tile >= 11 and tile <= 14:
-                        decoration = Decoration(img, x * TILE_SIZE, y * TILE_SIZE)
-                        decoration_group.add(decoration)
-                    elif tile == 15:  # create player
-                        player = Soldier('player', x * TILE_SIZE, y * TILE_SIZE, 1.65, 5, 20, 5)
-                        health_bar = HealthBar(10, 10, player.health, player.health)
-                    elif tile == 16:  # create enemies
-                        enemy = Soldier('enemy', x * TILE_SIZE, y * TILE_SIZE, 1.65, 2, 20, 0)
-                        enemy_group.add(enemy)
-                    elif tile == 17:  # create ammo box
-                        item_box = ItemBox('Ammo', x * TILE_SIZE, y * TILE_SIZE)
-                        item_box_group.add(item_box)
-                    elif tile == 18:  # create grenade box
-                        item_box = ItemBox('Grenade', x * TILE_SIZE, y * TILE_SIZE)
-                        item_box_group.add(item_box)
-                    elif tile == 19:  # create health box
-                        item_box = ItemBox('Health', x * TILE_SIZE, y * TILE_SIZE)
-                        item_box_group.add(item_box)
-                    elif tile == 20:  # create exit
-                        exit = Exit(img, x * TILE_SIZE, y * TILE_SIZE)
-                        exit_group.add(exit)
 
-        return player, health_bar
+# function to reset level
+def reset_level():
+    enemy_group.empty()
+    bullet_group.empty()
+    grenade_group.empty()
+    explosion_group.empty()
+    item_box_group.empty()
+    decoration_group.empty()
+    water_group.empty()
+    exit_group.empty()
 
-    def draw(self):
-        for tile in self.obstacle_list:
-            tile[1][0] += screen_scroll
-            screen.blit(tile[0], tile[1])
+
+def load_level(level: int):
+    # create empty tile list
+    _data = []
+    for row in range(ROWS):
+        r = [-1] * COLS
+        _data.append(r)
+
+    # load in level data and create world
+    with open(f'level{level}_data.csv', newline='') as csvfile:
+        reader = csv.reader(csvfile, delimiter=',')
+        for x, row in enumerate(reader):
+            for y, tile in enumerate(row):
+                _data[x][y] = int(tile)
+
+    global level_length
+    level_length = len(_data[0])
+    # iterate through each value in level data file
+    for y, row in enumerate(_data):
+        for x, tile in enumerate(row):
+            if tile >= 0:
+                img = img_list[tile]
+                img_rect = img.get_rect()
+                img_rect.x = x * TILE_SIZE
+                img_rect.y = y * TILE_SIZE
+                tile_data = (img, img_rect)
+                if tile >= 0 and tile <= 8:
+                    obstacle_list.append(tile_data)
+                elif tile >= 9 and tile <= 10:
+                    water = Water(img, x * TILE_SIZE, y * TILE_SIZE)
+                    water_group.add(water)
+                elif tile >= 11 and tile <= 14:
+                    decoration = Decoration(img, x * TILE_SIZE, y * TILE_SIZE)
+                    decoration_group.add(decoration)
+                elif tile == 15:  # create player
+                    player = Soldier('player', x * TILE_SIZE, y * TILE_SIZE, 1.65, 5, 20, 5)
+                    health_bar = HealthBar(10, 10, player.health, player.health)
+                elif tile == 16:  # create enemies
+                    enemy = Soldier('enemy', x * TILE_SIZE, y * TILE_SIZE, 1.65, 2, 20, 0)
+                    enemy_group.add(enemy)
+                elif tile == 17:  # create ammo box
+                    item_box = ItemBox('Ammo', x * TILE_SIZE, y * TILE_SIZE)
+                    item_box_group.add(item_box)
+                elif tile == 18:  # create grenade box
+                    item_box = ItemBox('Grenade', x * TILE_SIZE, y * TILE_SIZE)
+                    item_box_group.add(item_box)
+                elif tile == 19:  # create health box
+                    item_box = ItemBox('Health', x * TILE_SIZE, y * TILE_SIZE)
+                    item_box_group.add(item_box)
+                elif tile == 20:  # create exit
+                    exit = Exit(img, x * TILE_SIZE, y * TILE_SIZE)
+                    exit_group.add(exit)
+
+    return player, health_bar
+
+def draw_world():
+    for tile in obstacle_list:
+        tile[1][0] += screen_scroll
+        screen.blit(tile[0], tile[1])
 
 
 class Decoration(pygame.sprite.Sprite):
@@ -496,7 +492,7 @@ class Bullet(pygame.sprite.Sprite):
         if self.rect.right < 0 or self.rect.left > SCREEN_WIDTH:
             self.kill()
         # check for collision with level
-        for tile in world.obstacle_list:
+        for tile in obstacle_list:
             if tile[1].colliderect(self.rect):
                 self.kill()
 
@@ -531,7 +527,7 @@ class Grenade(pygame.sprite.Sprite):
         dy = self.vel_y
 
         # check for collision with level
-        for tile in world.obstacle_list:
+        for tile in obstacle_list:
             # check collision with walls
             if tile[1].colliderect(self.rect.x + dx, self.rect.y, self.width, self.height):
                 self.direction *= -1
@@ -636,6 +632,7 @@ exit_button = button.Button(SCREEN_WIDTH // 2 - 110, SCREEN_HEIGHT // 2 + 50, ex
 restart_button = button.Button(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 - 50, restart_img, 2)
 
 # create sprite groups
+obstacle_list = []
 enemy_group = pygame.sprite.Group()
 bullet_group = pygame.sprite.Group()
 grenade_group = pygame.sprite.Group()
@@ -645,7 +642,7 @@ decoration_group = pygame.sprite.Group()
 water_group = pygame.sprite.Group()
 exit_group = pygame.sprite.Group()
 
-world, player, health_bar = load_level(level)
+player, health_bar = load_level(level)
 
 run = True
 while run:
@@ -665,7 +662,7 @@ while run:
         # update background
         draw_bg()
         # draw world map
-        world.draw()
+        draw_world()
         # show player health
         health_bar.draw(player.health)
         # show ammo
@@ -735,7 +732,7 @@ while run:
                 bg_scroll = 0
                 reset_level()
 
-                world, player, health_bar = load_level(level)
+                player, health_bar = load_level(level)
         else:
             screen_scroll = 0
             if death_fade.fade():
@@ -745,7 +742,7 @@ while run:
                     bg_scroll = 0
                     reset_level()
 
-                    world, player, health_bar = load_level(level)
+                    player, health_bar = load_level(level)
 
     for event in pygame.event.get():
         # quit game
