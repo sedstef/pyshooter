@@ -4,9 +4,9 @@ import random
 
 import pygame
 from pygame import mixer
+from pygame.sprite import Sprite
 
 import button
-
 
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = int(SCREEN_WIDTH * 0.8)
@@ -27,6 +27,7 @@ COLS = 150
 TILE_SIZE = SCREEN_HEIGHT // ROWS
 TILE_TYPES = 21
 MAX_LEVELS = 3
+
 screen_scroll = 0
 bg_scroll = 0
 level = 1
@@ -109,8 +110,13 @@ def draw_bg():
         screen.blit(pine2_img, ((x * width) - bg_scroll * 0.8, SCREEN_HEIGHT - pine2_img.get_height()))
 
 
+class ScrollSprite(Sprite):
 
-class Soldier(pygame.sprite.Sprite):
+    def update(self):
+        self.rect.x += screen_scroll
+
+
+class Soldier(ScrollSprite):
     def __init__(self, char_type, x, y, scale, speed, ammo, grenades):
         pygame.sprite.Sprite.__init__(self)
         self.alive = True
@@ -325,8 +331,6 @@ class Soldier(pygame.sprite.Sprite):
         screen.blit(pygame.transform.flip(self.image, self.flip, False), self.rect)
 
 
-
-
 # function to reset level
 def reset_level():
     enemy_group.empty()
@@ -393,46 +397,38 @@ def load_level(level: int):
 
     return player, health_bar
 
+
 def draw_world():
     for tile in obstacle_list:
         tile[1][0] += screen_scroll
         screen.blit(tile[0], tile[1])
 
 
-class Decoration(pygame.sprite.Sprite):
+class Decoration(ScrollSprite):
     def __init__(self, img, x, y):
         pygame.sprite.Sprite.__init__(self)
         self.image = img
         self.rect = self.image.get_rect()
         self.rect.midtop = (x + TILE_SIZE // 2, y + (TILE_SIZE - self.image.get_height()))
 
-    def update(self):
-        self.rect.x += screen_scroll
 
-
-class Water(pygame.sprite.Sprite):
+class Water(ScrollSprite):
     def __init__(self, img, x, y):
         pygame.sprite.Sprite.__init__(self)
         self.image = img
         self.rect = self.image.get_rect()
         self.rect.midtop = (x + TILE_SIZE // 2, y + (TILE_SIZE - self.image.get_height()))
 
-    def update(self):
-        self.rect.x += screen_scroll
 
-
-class Exit(pygame.sprite.Sprite):
+class Exit(ScrollSprite):
     def __init__(self, img, x, y):
         pygame.sprite.Sprite.__init__(self)
         self.image = img
         self.rect = self.image.get_rect()
         self.rect.midtop = (x + TILE_SIZE // 2, y + (TILE_SIZE - self.image.get_height()))
 
-    def update(self):
-        self.rect.x += screen_scroll
 
-
-class ItemBox(pygame.sprite.Sprite):
+class ItemBox(ScrollSprite):
     def __init__(self, item_type, x, y):
         pygame.sprite.Sprite.__init__(self)
         self.item_type = item_type
@@ -441,8 +437,8 @@ class ItemBox(pygame.sprite.Sprite):
         self.rect.midtop = (x + TILE_SIZE // 2, y + (TILE_SIZE - self.image.get_height()))
 
     def update(self):
-        # scroll
-        self.rect.x += screen_scroll
+        super().update()
+
         # check if the player has picked up the box
         if pygame.sprite.collide_rect(self, player):
             # check what kind of box it was
@@ -475,7 +471,7 @@ class HealthBar():
         pygame.draw.rect(screen, GREEN, (self.x, self.y, 150 * ratio, 20))
 
 
-class Bullet(pygame.sprite.Sprite):
+class Bullet(ScrollSprite):
     def __init__(self, x, y, direction):
         pygame.sprite.Sprite.__init__(self)
         self.speed = 10
@@ -485,8 +481,9 @@ class Bullet(pygame.sprite.Sprite):
         self.direction = direction
 
     def update(self):
+        super().update()
         # move bullet
-        self.rect.x += (self.direction * self.speed) + screen_scroll
+        self.rect.x += (self.direction * self.speed)
         # check if bullet has gone off screen
         if self.rect.right < 0 or self.rect.left > SCREEN_WIDTH:
             self.kill()
@@ -507,7 +504,7 @@ class Bullet(pygame.sprite.Sprite):
                     self.kill()
 
 
-class Grenade(pygame.sprite.Sprite):
+class Grenade(ScrollSprite):
     def __init__(self, x, y, direction):
         pygame.sprite.Sprite.__init__(self)
         self.timer = 100
@@ -521,6 +518,7 @@ class Grenade(pygame.sprite.Sprite):
         self.direction = direction
 
     def update(self):
+        super().update()
         self.vel_y += GRAVITY
         dx = self.direction * self.speed
         dy = self.vel_y
@@ -544,7 +542,7 @@ class Grenade(pygame.sprite.Sprite):
                     dy = tile[1].top - self.rect.bottom
 
         # update grenade position
-        self.rect.x += dx + screen_scroll
+        self.rect.x += dx
         self.rect.y += dy
 
         # countdown timer
@@ -564,7 +562,7 @@ class Grenade(pygame.sprite.Sprite):
                     enemy.health -= 50
 
 
-class Explosion(pygame.sprite.Sprite):
+class Explosion(ScrollSprite):
     def __init__(self, x, y, scale):
         pygame.sprite.Sprite.__init__(self)
         self.images = []
@@ -579,8 +577,7 @@ class Explosion(pygame.sprite.Sprite):
         self.counter = 0
 
     def update(self):
-        # scroll
-        self.rect.x += screen_scroll
+        super().update()
 
         EXPLOSION_SPEED = 4
         # update explosion amimation
