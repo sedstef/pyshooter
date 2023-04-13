@@ -221,25 +221,25 @@ class Soldier(ScrollSprite):
         dy += self.vel_y
 
         # check for collision
-        for tile in obstacle_list:
+        for tile in platform_group:
             # check collision in the x direction
-            if tile[1].colliderect(self.rect.x + dx, self.rect.y, self.width, self.height):
+            if tile.rect.colliderect(self.rect.x + dx, self.rect.y, self.width, self.height):
                 dx = 0
                 # if the ai has hit a wall then make it turn around
                 if self.char_type == 'enemy':
                     self.direction *= -1
                     self.move_counter = 0
             # check for collision in the y direction
-            if tile[1].colliderect(self.rect.x, self.rect.y + dy, self.width, self.height):
+            if tile.rect.colliderect(self.rect.x, self.rect.y + dy, self.width, self.height):
                 # check if below the ground, i.e. jumping
                 if self.vel_y < 0:
                     self.vel_y = 0
-                    dy = tile[1].bottom - self.rect.top
+                    dy = tile.rect.bottom - self.rect.top
                 # check if above the ground, i.e. falling
                 elif self.vel_y >= 0:
                     self.vel_y = 0
                     self.in_air = False
-                    dy = tile[1].top - self.rect.bottom
+                    dy = tile.rect.top - self.rect.bottom
 
         # check for collision with water
         if pygame.sprite.spritecollide(self, water_group, False):
@@ -373,6 +373,7 @@ class Player(Soldier):
 
 # function to reset level
 def reset_level():
+    platform_group .empty()
     enemy_group.empty()
     bullet_group.empty()
     grenade_group.empty()
@@ -407,9 +408,8 @@ def load_level(level: int):
                 img_rect = img.get_rect()
                 img_rect.x = x * TILE_SIZE
                 img_rect.y = y * TILE_SIZE
-                tile_data = (img, img_rect)
                 if tile >= 0 and tile <= 8:
-                    obstacle_list.append(tile_data)
+                    platform_group.add(Tile(img, img_rect))
                 elif tile >= 9 and tile <= 10:
                     water_group.add(Tile(img, img_rect))
                 elif tile >= 11 and tile <= 14:
@@ -433,9 +433,9 @@ def load_level(level: int):
 
 
 def draw_world():
-    for tile in obstacle_list:
-        tile[1][0] += screen_scroll
-        screen.blit(tile[0], tile[1])
+    for tile in platform_group:
+        tile.rect[0] += screen_scroll
+        screen.blit(tile.image, tile.rect)
 
 
 
@@ -472,8 +472,8 @@ class Bullet(ScrollSprite):
         if self.rect.right < 0 or self.rect.left > SCREEN_WIDTH:
             self.kill()
         # check for collision with level
-        for tile in obstacle_list:
-            if tile[1].colliderect(self.rect):
+        for tile in platform_group:
+            if tile.rect.colliderect(self.rect):
                 self.kill()
 
         # check collision with characters
@@ -506,22 +506,22 @@ class Grenade(ScrollSprite):
         dy = self.vel_y
 
         # check for collision with level
-        for tile in obstacle_list:
+        for tile in platform_group:
             # check collision with walls
-            if tile[1].colliderect(self.rect.x + dx, self.rect.y, self.width, self.height):
+            if tile.rect.colliderect(self.rect.x + dx, self.rect.y, self.width, self.height):
                 self.direction *= -1
                 dx = self.direction * self.speed
             # check for collision in the y direction
-            if tile[1].colliderect(self.rect.x, self.rect.y + dy, self.width, self.height):
+            if tile.rect.colliderect(self.rect.x, self.rect.y + dy, self.width, self.height):
                 self.speed = 0
                 # check if below the ground, i.e. thrown up
                 if self.vel_y < 0:
                     self.vel_y = 0
-                    dy = tile[1].bottom - self.rect.top
+                    dy = tile.rect.bottom - self.rect.top
                 # check if above the ground, i.e. falling
                 elif self.vel_y >= 0:
                     self.vel_y = 0
-                    dy = tile[1].top - self.rect.bottom
+                    dy = tile.rect.top - self.rect.bottom
 
         # update grenade position
         self.rect.x += dx
@@ -611,7 +611,7 @@ exit_button = button.Button(SCREEN_WIDTH // 2 - 110, SCREEN_HEIGHT // 2 + 50, ex
 restart_button = button.Button(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 - 50, restart_img, 2)
 
 # create sprite groups
-obstacle_list = []
+platform_group = pygame.sprite.Group()
 enemy_group = pygame.sprite.Group()
 bullet_group = pygame.sprite.Group()
 grenade_group = pygame.sprite.Group()
