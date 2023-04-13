@@ -79,6 +79,34 @@ health_box_img = pygame.image.load('img/icons/health_box.png').convert_alpha()
 ammo_box_img = pygame.image.load('img/icons/ammo_box.png').convert_alpha()
 grenade_box_img = pygame.image.load('img/icons/grenade_box.png').convert_alpha()
 
+
+def load_soldiers(char_type: str, scale: int) -> []:
+    animation_list = []
+
+    # load all images for the players
+    animation_types = ['Idle', 'Run', 'Jump', 'Death']
+    for animation in animation_types:
+        # reset temporary list of images
+        temp_list = []
+        # count number of files in the folder
+        num_of_frames = len(os.listdir(f'img/{char_type}/{animation}'))
+        for i in range(num_of_frames):
+            img = pygame.image.load(f'img/{char_type}/{animation}/{i}.png').convert_alpha()
+            img = pygame.transform.scale(img, (int(img.get_width() * scale), int(img.get_height() * scale)))
+            temp_list.append(img)
+        animation_list.append(temp_list)
+    return animation_list
+
+
+def load_explosions(scale: int) -> []:
+    images = []
+    for num in range(1, 6):
+        img = pygame.image.load(f'img/explosion/exp{num}.png').convert_alpha()
+        img = pygame.transform.scale(img, (int(img.get_width() * scale), int(img.get_height() * scale)))
+        images.append(img)
+    return images
+
+
 # define colours
 BG = (144, 201, 120)
 RED = (255, 0, 0)
@@ -138,6 +166,7 @@ class CollectBox(ScrollSprite):
             # delete the item box
             self.kill()
 
+
 class Soldier(ScrollSprite):
     def __init__(self, char_type, x, y, scale, speed, ammo, grenades):
         # TODO init ScrollSprite
@@ -156,7 +185,7 @@ class Soldier(ScrollSprite):
         self.jump = False
         self.in_air = True
         self.flip = False
-        self.animation_list = []
+        self.animation_list = load_soldiers(char_type, scale)
         self.frame_index = 0
         self.action = 0
         self.update_time = pygame.time.get_ticks()
@@ -165,19 +194,6 @@ class Soldier(ScrollSprite):
         self.vision = pygame.Rect(0, 0, 150, 20)
         self.idling = False
         self.idling_counter = 0
-
-        # load all images for the players
-        animation_types = ['Idle', 'Run', 'Jump', 'Death']
-        for animation in animation_types:
-            # reset temporary list of images
-            temp_list = []
-            # count number of files in the folder
-            num_of_frames = len(os.listdir(f'img/{self.char_type}/{animation}'))
-            for i in range(num_of_frames):
-                img = pygame.image.load(f'img/{self.char_type}/{animation}/{i}.png').convert_alpha()
-                img = pygame.transform.scale(img, (int(img.get_width() * scale), int(img.get_height() * scale)))
-                temp_list.append(img)
-            self.animation_list.append(temp_list)
 
         self.image = self.animation_list[self.action][self.frame_index]
         self.rect = self.image.get_rect()
@@ -373,7 +389,7 @@ class Player(Soldier):
 
 # function to reset level
 def reset_level():
-    platform_group .empty()
+    platform_group.empty()
     enemy_group.empty()
     bullet_group.empty()
     grenade_group.empty()
@@ -436,8 +452,6 @@ def draw_world():
     for tile in platform_group:
         tile.rect[0] += screen_scroll
         screen.blit(tile.image, tile.rect)
-
-
 
 
 class HealthBar():
@@ -548,11 +562,7 @@ class Explosion(ScrollSprite):
     def __init__(self, x, y, scale):
         # TODO init ScrollSprite
         pygame.sprite.Sprite.__init__(self)
-        self.images = []
-        for num in range(1, 6):
-            img = pygame.image.load(f'img/explosion/exp{num}.png').convert_alpha()
-            img = pygame.transform.scale(img, (int(img.get_width() * scale), int(img.get_height() * scale)))
-            self.images.append(img)
+        self.images = load_explosions(scale)
         self.frame_index = 0
         self.image = self.images[self.frame_index]
         self.rect = self.image.get_rect()
