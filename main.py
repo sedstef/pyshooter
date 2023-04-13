@@ -1,6 +1,7 @@
 import csv
 import os
 import random
+from enum import Enum
 
 import pygame
 from pygame import mixer
@@ -77,11 +78,19 @@ grenade_img = pygame.image.load('img/icons/grenade.png').convert_alpha()
 health_box_img = pygame.image.load('img/icons/health_box.png').convert_alpha()
 ammo_box_img = pygame.image.load('img/icons/ammo_box.png').convert_alpha()
 grenade_box_img = pygame.image.load('img/icons/grenade_box.png').convert_alpha()
-item_boxes = {
-    'Health': health_box_img,
-    'Ammo': ammo_box_img,
-    'Grenade': grenade_box_img
-}
+
+
+class ItemType(Enum):
+    HEALTH = health_box_img
+    AMMO = ammo_box_img
+    GRENADE = grenade_box_img
+
+    def __init__(self, image):
+        self._image = image
+
+    def get_image(self):
+        return self._image
+
 
 # define colours
 BG = (144, 201, 120)
@@ -111,6 +120,9 @@ def draw_bg():
 
 
 class ScrollSprite(Sprite):
+
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
 
     def update(self):
         self.rect.x += screen_scroll
@@ -383,13 +395,13 @@ def load_level(level: int):
                     enemy = Soldier('enemy', x * TILE_SIZE, y * TILE_SIZE, 1.65, 2, 20, 0)
                     enemy_group.add(enemy)
                 elif tile == 17:  # create ammo box
-                    item_box = ItemBox('Ammo', x * TILE_SIZE, y * TILE_SIZE)
+                    item_box = ItemBox(ItemType.AMMO, x * TILE_SIZE, y * TILE_SIZE)
                     item_box_group.add(item_box)
                 elif tile == 18:  # create grenade box
-                    item_box = ItemBox('Grenade', x * TILE_SIZE, y * TILE_SIZE)
+                    item_box = ItemBox(ItemType.GRENADE, x * TILE_SIZE, y * TILE_SIZE)
                     item_box_group.add(item_box)
                 elif tile == 19:  # create health box
-                    item_box = ItemBox('Health', x * TILE_SIZE, y * TILE_SIZE)
+                    item_box = ItemBox(ItemType.HEALTH, x * TILE_SIZE, y * TILE_SIZE)
                     item_box_group.add(item_box)
                 elif tile == 20:  # create exit
                     exit = Exit(img, x * TILE_SIZE, y * TILE_SIZE)
@@ -429,10 +441,10 @@ class Exit(ScrollSprite):
 
 
 class ItemBox(ScrollSprite):
-    def __init__(self, item_type, x, y):
+    def __init__(self, item_type: ItemType, x, y):
         pygame.sprite.Sprite.__init__(self)
         self.item_type = item_type
-        self.image = item_boxes[self.item_type]
+        self.image = item_type.get_image()
         self.rect = self.image.get_rect()
         self.rect.midtop = (x + TILE_SIZE // 2, y + (TILE_SIZE - self.image.get_height()))
 
@@ -442,13 +454,13 @@ class ItemBox(ScrollSprite):
         # check if the player has picked up the box
         if pygame.sprite.collide_rect(self, player):
             # check what kind of box it was
-            if self.item_type == 'Health':
+            if self.item_type == ItemType.HEALTH:
                 player.health += 25
                 if player.health > player.max_health:
                     player.health = player.max_health
-            elif self.item_type == 'Ammo':
+            elif self.item_type == ItemType.AMMO:
                 player.ammo += 15
-            elif self.item_type == 'Grenade':
+            elif self.item_type == ItemType.GRENADE:
                 player.grenades += 3
             # delete the item box
             self.kill()
