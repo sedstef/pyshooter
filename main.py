@@ -4,7 +4,7 @@ import random
 from enum import Enum
 
 import pygame
-from pygame import mixer
+from pygame import mixer, Surface, Rect
 from pygame.sprite import Sprite
 
 import button
@@ -122,13 +122,18 @@ def draw_bg():
 
 class ScrollSprite(Sprite):
 
-    def __init__(self, image, rect):
+    def __init__(self, image: Surface, rect: Rect):
         pygame.sprite.Sprite.__init__(self)
         self.image = image
         self.rect = rect
 
     def update(self):
         self.rect.x += screen_scroll
+
+
+class Tile(ScrollSprite):
+    def __init__(self, image: Surface, rect: Rect):
+        super().__init__(image, rect)
 
 
 class Soldier(ScrollSprite):
@@ -434,11 +439,6 @@ def draw_world():
     for tile in obstacle_list:
         tile[1][0] += screen_scroll
         screen.blit(tile[0], tile[1])
-
-
-class Tile(ScrollSprite):
-    def __init__(self, image, rect):
-        super().__init__(image, rect)
 
 
 class ItemBox(ScrollSprite):
