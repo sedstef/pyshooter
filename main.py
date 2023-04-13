@@ -7,17 +7,16 @@ from pygame import mixer
 
 import button
 
-mixer.init()
-pygame.init()
 
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = int(SCREEN_WIDTH * 0.8)
 
+mixer.init()
+pygame.init()
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption('Shooter')
 
 # set framerate
-clock = pygame.time.Clock()
 FPS = 60
 
 # define game variables
@@ -643,6 +642,8 @@ water_group = pygame.sprite.Group()
 exit_group = pygame.sprite.Group()
 
 player, health_bar = load_level(level)
+
+clock = pygame.time.Clock()
 
 run = True
 while run:
