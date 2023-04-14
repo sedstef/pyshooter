@@ -74,11 +74,6 @@ for x in range(TILE_TYPES):
 bullet_img = Assets.load_image_alpha('img/icons/bullet.png')
 # grenade
 grenade_img = Assets.load_image_alpha('img/icons/grenade.png')
-# pick up boxes
-health_box_img = Assets.load_image_alpha('img/icons/health_box.png')
-ammo_box_img = Assets.load_image_alpha('img/icons/ammo_box.png')
-grenade_box_img = Assets.load_image_alpha('img/icons/grenade_box.png')
-
 
 def load_soldiers(char_type: str, scale: int) -> []:
     animation_list = []
