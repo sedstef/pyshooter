@@ -56,7 +56,7 @@ class Assets:
     _grenade_img = None
 
     @staticmethod
-    def get_tile(tile):
+    def get_image_tile(tile):
         if Assets._tile_list is None:
             Assets._tile_list = []
             for x in range(TILE_TYPES):
@@ -66,16 +66,44 @@ class Assets:
         return Assets._tile_list[tile]
 
     @staticmethod
-    def get_bullet():
+    def get_image_bullet():
         if Assets._bullet_img is None:
             Assets._bullet_img = Assets.load_image_alpha('img/icons/bullet.png')
         return Assets._bullet_img
 
     @staticmethod
-    def get_grenade():
+    def get_image_grenade():
         if Assets._grenade_img is None:
             Assets._grenade_img = Assets.load_image_alpha('img/icons/grenade.png')
         return Assets._grenade_img
+
+    @staticmethod
+    def load_animation_soldier(char_type: str, scale: int) -> []:
+        animation_list = []
+
+        # load all images for the players
+        animation_types = ['Idle', 'Run', 'Jump', 'Death']
+        for animation in animation_types:
+            # reset temporary list of images
+            temp_list = []
+            # count number of files in the folder
+            num_of_frames = len(os.listdir(f'img/{char_type}/{animation}'))
+            for i in range(num_of_frames):
+                img = Assets.load_image_alpha(f'img/{char_type}/{animation}/{i}.png')
+                img = pygame.transform.scale(img, (int(img.get_width() * scale), int(img.get_height() * scale)))
+                temp_list.append(img)
+            animation_list.append(temp_list)
+        return animation_list
+
+    @staticmethod
+    def load_animation_explosions(scale: int) -> []:
+        images = []
+        for num in range(1, 6):
+            img = Assets.load_image_alpha(f'img/explosion/exp{num}.png')
+            img = pygame.transform.scale(img, (int(img.get_width() * scale), int(img.get_height() * scale)))
+            images.append(img)
+        return images
+
 
     @staticmethod
     def load_image_alpha(name: str) -> Surface:
@@ -88,31 +116,6 @@ class Assets:
         return sound
 
 
-def load_soldiers(char_type: str, scale: int) -> []:
-    animation_list = []
-
-    # load all images for the players
-    animation_types = ['Idle', 'Run', 'Jump', 'Death']
-    for animation in animation_types:
-        # reset temporary list of images
-        temp_list = []
-        # count number of files in the folder
-        num_of_frames = len(os.listdir(f'img/{char_type}/{animation}'))
-        for i in range(num_of_frames):
-            img = Assets.load_image_alpha(f'img/{char_type}/{animation}/{i}.png')
-            img = pygame.transform.scale(img, (int(img.get_width() * scale), int(img.get_height() * scale)))
-            temp_list.append(img)
-        animation_list.append(temp_list)
-    return animation_list
-
-
-def load_explosions(scale: int) -> []:
-    images = []
-    for num in range(1, 6):
-        img = Assets.load_image_alpha(f'img/explosion/exp{num}.png')
-        img = pygame.transform.scale(img, (int(img.get_width() * scale), int(img.get_height() * scale)))
-        images.append(img)
-    return images
 
 
 # define colours
@@ -203,7 +206,7 @@ class Soldier(ScrollSprite):
         self._jumping = False
         self.in_air = True
         self.flip = False
-        self.animation_list = load_soldiers(char_type, scale)
+        self.animation_list = Assets.load_animation_soldier(char_type, scale)
         self.frame_index = 0
         self.action = 0
         self.update_time = pygame.time.get_ticks()
@@ -445,7 +448,7 @@ def load_level(level: int):
     for y, row in enumerate(_data):
         for x, tile in enumerate(row):
             if tile >= 0:
-                img = Assets.get_tile(tile)
+                img = Assets.get_image_tile(tile)
                 img_rect = img.get_rect()
                 img_rect.x = x * TILE_SIZE
                 img_rect.y = y * TILE_SIZE
@@ -500,7 +503,7 @@ class Bullet(ScrollSprite):
 
     @staticmethod
     def create(x, y, direction):
-        return Bullet(Assets.get_bullet(), x, y, direction)
+        return Bullet(Assets.get_image_bullet(), x, y, direction)
 
     def __init__(self, image, x, y, direction):
         super().__init__(image, image.get_rect())
@@ -535,7 +538,7 @@ class Bullet(ScrollSprite):
 class Grenade(ScrollSprite):
     @staticmethod
     def create(x, y, direction):
-        return Grenade(Assets.get_grenade(), x, y, direction)
+        return Grenade(Assets.get_image_grenade(), x, y, direction)
 
     def __init__(self, image, x, y, direction):
         super().__init__(image, image.get_rect())
@@ -597,7 +600,7 @@ class Explosion(ScrollSprite):
     def __init__(self, x, y, scale):
         # TODO init ScrollSprite
         pygame.sprite.Sprite.__init__(self)
-        self.images = load_explosions(scale)
+        self.images = Assets.load_animation_explosions(scale)
         self.frame_index = 0
         self.image = self.images[self.frame_index]
         self.rect = self.image.get_rect()
@@ -702,11 +705,11 @@ while run:
         # show ammo
         draw_text(screen, 'AMMO: ', font, WHITE, 10, 35)
         for x in range(player.ammo):
-            screen.blit(Assets.get_bullet(), (90 + (x * 10), 40))
+            screen.blit(Assets.get_image_bullet(), (90 + (x * 10), 40))
         # show grenades
         draw_text(screen, 'GRENADES: ', font, WHITE, 10, 60)
         for x in range(player.grenades):
-            screen.blit(Assets.get_grenade(), (135 + (x * 15), 60))
+            screen.blit(Assets.get_image_grenade(), (135 + (x * 15), 60))
 
         player.update()
         player.draw(screen)
