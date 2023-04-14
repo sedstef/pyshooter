@@ -5,7 +5,7 @@ import random
 import pygame
 from pygame import mixer, Surface, Rect
 from pygame.image import load
-from pygame.mixer import Sound
+from pygame.mixer import Sound, music
 from pygame.sprite import Sprite
 
 from button import Button
@@ -13,10 +13,6 @@ from button import Button
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = int(SCREEN_WIDTH * 0.8)
 
-mixer.init()
-pygame.init()
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption('Shooter')
 
 # set framerate
 FPS = 60
@@ -43,11 +39,6 @@ moving_right = False
 shoot = False
 grenade = False
 grenade_thrown = False
-
-# load music and sounds
-pygame.mixer.music.load('audio/music2.mp3')
-pygame.mixer.music.set_volume(0.3)
-pygame.mixer.music.play(-1, 0.0, 5000)
 
 
 class Assets:
@@ -126,8 +117,6 @@ GREEN = (0, 255, 0)
 BLACK = (0, 0, 0)
 PINK = (235, 65, 54)
 
-# define font
-font = pygame.font.SysFont('Futura', 30)
 
 
 def draw_text(screen: Surface, text, font, text_col, x, y):
@@ -142,6 +131,12 @@ class Background:
         self._mountain_img = Assets.load_image_alpha('img/Background/mountain.png')
         self._pine1_img = Assets.load_image_alpha('img/Background/pine1.png')
         self._pine2_img = Assets.load_image_alpha('img/Background/pine2.png')
+
+    def play_music(self):
+        # load music and sounds
+        music.load('audio/music2.mp3')
+        music.set_volume(0.3)
+        music.play(-1, 0.0, 5000)
 
     def draw(self, screen: Surface):
         screen.fill(BG)
@@ -660,11 +655,20 @@ def create_button(name: str, width: int, height: int, scale: int) -> Button:
     return Button(SCREEN_WIDTH // 2 - width, SCREEN_HEIGHT // 2 + height, img, scale)
 
 
+mixer.init()
+pygame.init()
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+pygame.display.set_caption('Shooter')
+
+# define font
+font = pygame.font.SysFont('Futura', 30)
+
 start_button = create_button('img/start_btn.png', 130, -150, 1)
 exit_button = create_button('img/exit_btn.png', 110, 50, 1)
 restart_button = create_button('img/restart_btn.png', 100, - 50, 2)
 
 background = Background()
+background.play_music()
 
 # create sprite groups
 platform_group = pygame.sprite.Group()
