@@ -51,8 +51,19 @@ pygame.mixer.music.play(-1, 0.0, 5000)
 
 
 class Assets:
+    _tile_list = None
     _bullet_img = None
     _grenade_img = None
+
+    @staticmethod
+    def get_tile(tile):
+        if Assets._tile_list is None:
+            Assets._tile_list = []
+            for x in range(TILE_TYPES):
+                img = load(f'img/Tile/{x}.png')
+                img = pygame.transform.scale(img, (TILE_SIZE, TILE_SIZE))
+                Assets._tile_list.append(img)
+        return Assets._tile_list[tile]
 
     @staticmethod
     def get_bullet():
@@ -67,25 +78,14 @@ class Assets:
         return Assets._grenade_img
 
     @staticmethod
+    def load_image_alpha(name: str) -> Surface:
+        return load(name).convert_alpha()
+
+    @staticmethod
     def load_sound(name: str, volume: float) -> Sound:
         sound = Sound(name)
         sound.set_volume(volume)
         return sound
-
-    @staticmethod
-    def load_image_alpha(name: str) -> Surface:
-        return load(name).convert_alpha()
-
-
-# load images
-
-# store tiles in a list
-img_list = []
-for x in range(TILE_TYPES):
-    img = pygame.image.load(f'img/Tile/{x}.png')
-    img = pygame.transform.scale(img, (TILE_SIZE, TILE_SIZE))
-    img_list.append(img)
-
 
 
 def load_soldiers(char_type: str, scale: int) -> []:
@@ -445,7 +445,7 @@ def load_level(level: int):
     for y, row in enumerate(_data):
         for x, tile in enumerate(row):
             if tile >= 0:
-                img = img_list[tile]
+                img = Assets.get_tile(tile)
                 img_rect = img.get_rect()
                 img_rect.x = x * TILE_SIZE
                 img_rect.y = y * TILE_SIZE
