@@ -119,19 +119,21 @@ PINK = (235, 65, 54)
 font = pygame.font.SysFont('Futura', 30)
 
 
-def draw_text(text, font, text_col, x, y):
+def draw_text(screen: Surface, text, font, text_col, x, y):
     img = font.render(text, True, text_col)
     screen.blit(img, (x, y))
 
 
-def draw_bg():
-    screen.fill(BG)
-    width = sky_img.get_width()
-    for x in range(5):
-        screen.blit(sky_img, ((x * width) - bg_scroll * 0.5, 0))
-        screen.blit(mountain_img, ((x * width) - bg_scroll * 0.6, SCREEN_HEIGHT - mountain_img.get_height() - 300))
-        screen.blit(pine1_img, ((x * width) - bg_scroll * 0.7, SCREEN_HEIGHT - pine1_img.get_height() - 150))
-        screen.blit(pine2_img, ((x * width) - bg_scroll * 0.8, SCREEN_HEIGHT - pine2_img.get_height()))
+class Background:
+
+    def draw(self, screen: Surface):
+        screen.fill(BG)
+        width = sky_img.get_width()
+        for x in range(5):
+            screen.blit(sky_img, ((x * width) - bg_scroll * 0.5, 0))
+            screen.blit(mountain_img, ((x * width) - bg_scroll * 0.6, SCREEN_HEIGHT - mountain_img.get_height() - 300))
+            screen.blit(pine1_img, ((x * width) - bg_scroll * 0.7, SCREEN_HEIGHT - pine1_img.get_height() - 150))
+            screen.blit(pine2_img, ((x * width) - bg_scroll * 0.8, SCREEN_HEIGHT - pine2_img.get_height()))
 
 
 class ScrollSprite(Sprite):
@@ -366,7 +368,7 @@ class Soldier(ScrollSprite):
             self.alive = False
             self.update_action(3)
 
-    def draw(self):
+    def draw(self, screen: Surface):
         screen.blit(pygame.transform.flip(self.image, self.flip, False), self.rect)
 
 
@@ -448,7 +450,7 @@ def load_level(level: int):
     return player, health_bar
 
 
-def draw_world():
+def draw_world(screen: Surface):
     for tile in platform_group:
         tile.rect[0] += screen_scroll
         screen.blit(tile.image, tile.rect)
@@ -461,7 +463,7 @@ class HealthBar():
         self.health = health
         self.max_health = max_health
 
-    def draw(self, health):
+    def draw(self, screen: Surface, health):
         # update with new health
         self.health = health
         # calculate health ratio
@@ -593,7 +595,7 @@ class ScreenFade():
         self.speed = speed
         self.fade_counter = 0
 
-    def fade(self):
+    def draw(self, screen: Surface):
         fade_complete = False
         self.fade_counter += self.speed
         if self.direction == 1:  # whole screen fade
@@ -619,6 +621,8 @@ death_fade = ScreenFade(2, PINK, 4)
 start_button = button.Button(SCREEN_WIDTH // 2 - 130, SCREEN_HEIGHT // 2 - 150, start_img, 1)
 exit_button = button.Button(SCREEN_WIDTH // 2 - 110, SCREEN_HEIGHT // 2 + 50, exit_img, 1)
 restart_button = button.Button(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 - 50, restart_img, 2)
+
+background = Background()
 
 # create sprite groups
 platform_group = pygame.sprite.Group()
@@ -651,29 +655,29 @@ while run:
             run = False
     else:
         # update background
-        draw_bg()
+        background.draw(screen)
         # draw world map
-        draw_world()
+        draw_world(screen)
         # show player health
-        health_bar.draw(player.health)
+        health_bar.draw(screen, player.health)
         # show ammo
-        draw_text('AMMO: ', font, WHITE, 10, 35)
+        draw_text(screen, 'AMMO: ', font, WHITE, 10, 35)
         for x in range(player.ammo):
             screen.blit(bullet_img, (90 + (x * 10), 40))
         # show grenades
-        draw_text('GRENADES: ', font, WHITE, 10, 60)
+        draw_text(screen, 'GRENADES: ', font, WHITE, 10, 60)
         for x in range(player.grenades):
             screen.blit(grenade_img, (135 + (x * 15), 60))
 
         player.update()
-        player.draw()
+        player.draw(screen)
 
         for enemy in enemy_group:
             enemy.ai()
             enemy.update()
-            enemy.draw()
+            enemy.draw(screen)
 
-        # update and draw groups
+        # recalculate positions
         bullet_group.update()
         grenade_group.update()
         explosion_group.update()
@@ -681,6 +685,8 @@ while run:
         decoration_group.update()
         water_group.update()
         exit_group.update()
+
+        # draw groups
         bullet_group.draw(screen)
         grenade_group.draw(screen)
         explosion_group.draw(screen)
@@ -691,7 +697,7 @@ while run:
 
         # show intro
         if start_intro == True:
-            if intro_fade.fade():
+            if intro_fade.draw(screen):
                 start_intro = False
                 intro_fade.fade_counter = 0
 
@@ -726,7 +732,7 @@ while run:
                 player, health_bar = load_level(level)
         else:
             screen_scroll = 0
-            if death_fade.fade():
+            if death_fade.draw(screen):
                 if restart_button.draw(screen):
                     death_fade.fade_counter = 0
                     start_intro = True
