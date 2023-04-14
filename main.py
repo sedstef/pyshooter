@@ -430,7 +430,7 @@ def load_level(level: int):
                     decoration_group.add(Tile(img, img_rect))
                 elif tile == 15:  # create player
                     player = Player('player', x * TILE_SIZE, y * TILE_SIZE, 1.65, 5, 20, 5)
-                    health_bar = HealthBar(10, 10, player.health, player.health)
+                    health_bar = HealthBar(10, 10, player.health)
                 elif tile == 16:  # create enemies
                     enemy = Soldier('enemy', x * TILE_SIZE, y * TILE_SIZE, 1.65, 2, 20, 0)
                     enemy_group.add(enemy)
@@ -453,17 +453,14 @@ def draw_world(screen: Surface):
 
 
 class HealthBar():
-    def __init__(self, x, y, health, max_health):
+    def __init__(self, x, y, max_health):
         self.x = x
         self.y = y
-        self.health = health
         self.max_health = max_health
 
-    def draw(self, screen: Surface, health):
-        # update with new health
-        self.health = health
+    def draw(self, screen: Surface, player: Player):
         # calculate health ratio
-        ratio = self.health / self.max_health
+        ratio = player.health / self.max_health
         pygame.draw.rect(screen, BLACK, (self.x - 2, self.y - 2, 154, 24))
         pygame.draw.rect(screen, RED, (self.x, self.y, 150, 20))
         pygame.draw.rect(screen, GREEN, (self.x, self.y, 150 * ratio, 20))
@@ -708,7 +705,7 @@ while run:
         # draw world map
         draw_world(screen)
         # show player health
-        health_bar.draw(screen, player.health)
+        health_bar.draw(screen, player)
 
         player.update()
         player.draw(screen)
