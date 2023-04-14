@@ -4,6 +4,7 @@ import random
 
 import pygame
 from pygame import mixer, Surface, Rect
+from pygame.mixer import Sound
 from pygame.sprite import Sprite
 
 import button
@@ -47,12 +48,14 @@ pygame.mixer.music.load('audio/music2.mp3')
 pygame.mixer.music.set_volume(0.3)
 pygame.mixer.music.play(-1, 0.0, 5000)
 
-jump_fx = pygame.mixer.Sound('audio/jump.wav')
-jump_fx.set_volume(0.05)
-shot_fx = pygame.mixer.Sound('audio/shot.wav')
-shot_fx.set_volume(0.05)
-grenade_fx = pygame.mixer.Sound('audio/grenade.wav')
-grenade_fx.set_volume(0.05)
+
+class Assets:
+    @staticmethod
+    def load_sound(name: str, volume: float):
+        sound = Sound(name)
+        sound.set_volume(volume)
+        return sound
+
 
 # load images
 # button images
@@ -184,7 +187,7 @@ class Soldier(ScrollSprite):
         self.max_health = self.health
         self.direction = 1
         self.vel_y = 0
-        self.jump = False
+        self._jumping = False
         self.in_air = True
         self.flip = False
         self.animation_list = load_soldiers(char_type, scale)
@@ -202,6 +205,7 @@ class Soldier(ScrollSprite):
         self.rect.center = (x, y)
         self.width = self.image.get_width()
         self.height = self.image.get_height()
+        self._shot_fx = Assets.load_sound('audio/shot.wav', 0.5)
 
     def update(self):
         self.update_animation()
@@ -227,9 +231,9 @@ class Soldier(ScrollSprite):
             self.direction = 1
 
         # jump
-        if self.jump == True and self.in_air == False:
+        if self._jumping == True and self.in_air == False:
             self.vel_y = -12
-            self.jump = False
+            self._jumping = False
             self.in_air = True
 
         # apply gravity
@@ -299,7 +303,7 @@ class Soldier(ScrollSprite):
             bullet_group.add(bullet)
             # reduce ammo
             self.ammo -= 1
-            shot_fx.play()
+            self._shot_fx.play()
 
     def ai(self):
         if self.alive and player.alive:
@@ -376,6 +380,7 @@ class Player(Soldier):
 
     def __init__(self, char_type, x, y, scale, speed, ammo, grenades):
         super().__init__(char_type, x, y, scale, speed, ammo, grenades)
+        self._jump_fx = Assets.load_sound('audio/jump.wav', 0.25)
 
     def add_health(self):
         self.health += 25
@@ -387,6 +392,10 @@ class Player(Soldier):
 
     def add_grenade(self):
         self.grenades += 3
+
+    def jump(self):
+        self._jumping = True
+        self._jump_fx.play()
 
 
 # function to reset level
@@ -514,6 +523,7 @@ class Grenade(ScrollSprite):
         self.width = self.image.get_width()
         self.height = self.image.get_height()
         self.direction = direction
+        self._grenade_fx = Assets.load_sound('audio/grenade.wav', 0.5)
 
     def update(self):
         super().update()
@@ -547,7 +557,7 @@ class Grenade(ScrollSprite):
         self.timer -= 1
         if self.timer <= 0:
             self.kill()
-            grenade_fx.play()
+            self._grenade_fx.play()
             explosion = Explosion(self.rect.x, self.rect.y, 0.5)
             explosion_group.add(explosion)
             # do damage to anyone that is nearby
@@ -756,8 +766,7 @@ while run:
             if event.key == pygame.K_q:
                 grenade = True
             if event.key == pygame.K_w and player.alive:
-                player.jump = True
-                jump_fx.play()
+                player.jump()
             if event.key == pygame.K_ESCAPE:
                 run = False
 
