@@ -51,6 +51,21 @@ pygame.mixer.music.play(-1, 0.0, 5000)
 
 
 class Assets:
+    _bullet_img = None
+    _grenade_img = None
+
+    @staticmethod
+    def get_bullet():
+        if Assets._bullet_img is None:
+            Assets._bullet_img = Assets.load_image_alpha('img/icons/bullet.png')
+        return Assets._bullet_img
+
+    @staticmethod
+    def get_grenade():
+        if Assets._grenade_img is None:
+            Assets._grenade_img = Assets.load_image_alpha('img/icons/grenade.png')
+        return Assets._grenade_img
+
     @staticmethod
     def load_sound(name: str, volume: float) -> Sound:
         sound = Sound(name)
@@ -70,10 +85,8 @@ for x in range(TILE_TYPES):
     img = pygame.image.load(f'img/Tile/{x}.png')
     img = pygame.transform.scale(img, (TILE_SIZE, TILE_SIZE))
     img_list.append(img)
-# bullet
-bullet_img = Assets.load_image_alpha('img/icons/bullet.png')
-# grenade
-grenade_img = Assets.load_image_alpha('img/icons/grenade.png')
+
+
 
 def load_soldiers(char_type: str, scale: int) -> []:
     animation_list = []
@@ -298,8 +311,9 @@ class Soldier(ScrollSprite):
     def shoot(self):
         if self.shoot_cooldown == 0 and self.ammo > 0:
             self.shoot_cooldown = 20
-            bullet = Bullet(self.rect.centerx + (0.75 * self.rect.size[0] * self.direction), self.rect.centery,
-                            self.direction)
+            bullet = Bullet.create(self.rect.centerx + (0.75 * self.rect.size[0] * self.direction),
+                                   self.rect.centery,
+                                   self.direction)
             bullet_group.add(bullet)
             # reduce ammo
             self.ammo -= 1
@@ -483,8 +497,13 @@ class HealthBar():
 
 
 class Bullet(ScrollSprite):
-    def __init__(self, x, y, direction):
-        super().__init__(bullet_img, bullet_img.get_rect())
+
+    @staticmethod
+    def create(x, y, direction):
+        return Bullet(Assets.get_bullet(), x, y, direction)
+
+    def __init__(self, image, x, y, direction):
+        super().__init__(image, image.get_rect())
         self.speed = 10
         self.rect.center = (x, y)
         self.direction = direction
@@ -514,8 +533,12 @@ class Bullet(ScrollSprite):
 
 
 class Grenade(ScrollSprite):
-    def __init__(self, x, y, direction):
-        super().__init__(grenade_img, grenade_img.get_rect())
+    @staticmethod
+    def create(x, y, direction):
+        return Grenade(Assets.get_grenade(), x, y, direction)
+
+    def __init__(self, image, x, y, direction):
+        super().__init__(image, image.get_rect())
         self.timer = 100
         self.vel_y = -11
         self.speed = 7
@@ -679,11 +702,11 @@ while run:
         # show ammo
         draw_text(screen, 'AMMO: ', font, WHITE, 10, 35)
         for x in range(player.ammo):
-            screen.blit(bullet_img, (90 + (x * 10), 40))
+            screen.blit(Assets.get_bullet(), (90 + (x * 10), 40))
         # show grenades
         draw_text(screen, 'GRENADES: ', font, WHITE, 10, 60)
         for x in range(player.grenades):
-            screen.blit(grenade_img, (135 + (x * 15), 60))
+            screen.blit(Assets.get_grenade(), (135 + (x * 15), 60))
 
         player.update()
         player.draw(screen)
@@ -724,8 +747,8 @@ while run:
                 player.shoot()
             # throw grenades
             elif grenade and grenade_thrown == False and player.grenades > 0:
-                grenade = Grenade(player.rect.centerx + (0.5 * player.rect.size[0] * player.direction), \
-                                  player.rect.top, player.direction)
+                grenade = Grenade.create(player.rect.centerx + (0.5 * player.rect.size[0] * player.direction), \
+                                         player.rect.top, player.direction)
                 grenade_group.add(grenade)
                 # reduce grenades
                 player.grenades -= 1
