@@ -1,1 +1,7 @@
+
+# JetBrains
 .idea/
+
+
+# misc
+*.bak
