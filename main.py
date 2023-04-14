@@ -4,10 +4,11 @@ import random
 
 import pygame
 from pygame import mixer, Surface, Rect
+from pygame.image import load
 from pygame.mixer import Sound
 from pygame.sprite import Sprite
 
-import button
+from button import Button
 
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = int(SCREEN_WIDTH * 0.8)
@@ -51,22 +52,23 @@ pygame.mixer.music.play(-1, 0.0, 5000)
 
 class Assets:
     @staticmethod
-    def load_sound(name: str, volume: float):
+    def load_sound(name: str, volume: float) -> Sound:
         sound = Sound(name)
         sound.set_volume(volume)
         return sound
 
+    @staticmethod
+    def load_image_alpha(name: str) -> Surface:
+        return load(name).convert_alpha()
+
 
 # load images
-# button images
-start_img = pygame.image.load('img/start_btn.png').convert_alpha()
-exit_img = pygame.image.load('img/exit_btn.png').convert_alpha()
-restart_img = pygame.image.load('img/restart_btn.png').convert_alpha()
 # background
-pine1_img = pygame.image.load('img/Background/pine1.png').convert_alpha()
-pine2_img = pygame.image.load('img/Background/pine2.png').convert_alpha()
-mountain_img = pygame.image.load('img/Background/mountain.png').convert_alpha()
-sky_img = pygame.image.load('img/Background/sky_cloud.png').convert_alpha()
+pine1_img = Assets.load_image_alpha('img/Background/pine1.png')
+pine2_img = Assets.load_image_alpha('img/Background/pine2.png')
+mountain_img = Assets.load_image_alpha('img/Background/mountain.png')
+sky_img = Assets.load_image_alpha('img/Background/sky_cloud.png')
+
 # store tiles in a list
 img_list = []
 for x in range(TILE_TYPES):
@@ -74,13 +76,13 @@ for x in range(TILE_TYPES):
     img = pygame.transform.scale(img, (TILE_SIZE, TILE_SIZE))
     img_list.append(img)
 # bullet
-bullet_img = pygame.image.load('img/icons/bullet.png').convert_alpha()
+bullet_img = Assets.load_image_alpha('img/icons/bullet.png')
 # grenade
-grenade_img = pygame.image.load('img/icons/grenade.png').convert_alpha()
+grenade_img = Assets.load_image_alpha('img/icons/grenade.png')
 # pick up boxes
-health_box_img = pygame.image.load('img/icons/health_box.png').convert_alpha()
-ammo_box_img = pygame.image.load('img/icons/ammo_box.png').convert_alpha()
-grenade_box_img = pygame.image.load('img/icons/grenade_box.png').convert_alpha()
+health_box_img = Assets.load_image_alpha('img/icons/health_box.png')
+ammo_box_img = Assets.load_image_alpha('img/icons/ammo_box.png')
+grenade_box_img = Assets.load_image_alpha('img/icons/grenade_box.png')
 
 
 def load_soldiers(char_type: str, scale: int) -> []:
@@ -94,7 +96,7 @@ def load_soldiers(char_type: str, scale: int) -> []:
         # count number of files in the folder
         num_of_frames = len(os.listdir(f'img/{char_type}/{animation}'))
         for i in range(num_of_frames):
-            img = pygame.image.load(f'img/{char_type}/{animation}/{i}.png').convert_alpha()
+            img = Assets.load_image_alpha(f'img/{char_type}/{animation}/{i}.png')
             img = pygame.transform.scale(img, (int(img.get_width() * scale), int(img.get_height() * scale)))
             temp_list.append(img)
         animation_list.append(temp_list)
@@ -104,7 +106,7 @@ def load_soldiers(char_type: str, scale: int) -> []:
 def load_explosions(scale: int) -> []:
     images = []
     for num in range(1, 6):
-        img = pygame.image.load(f'img/explosion/exp{num}.png').convert_alpha()
+        img = Assets.load_image_alpha(f'img/explosion/exp{num}.png')
         img = pygame.transform.scale(img, (int(img.get_width() * scale), int(img.get_height() * scale)))
         images.append(img)
     return images
@@ -627,10 +629,16 @@ class ScreenFade():
 intro_fade = ScreenFade(1, BLACK, 4)
 death_fade = ScreenFade(2, PINK, 4)
 
-# create buttons
-start_button = button.Button(SCREEN_WIDTH // 2 - 130, SCREEN_HEIGHT // 2 - 150, start_img, 1)
-exit_button = button.Button(SCREEN_WIDTH // 2 - 110, SCREEN_HEIGHT // 2 + 50, exit_img, 1)
-restart_button = button.Button(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 - 50, restart_img, 2)
+
+@staticmethod  # create buttons
+def create_button(name: str, width: int, height: int, scale: int) -> Button:
+    img = Assets.load_image_alpha(name)
+    return Button(SCREEN_WIDTH // 2 - width, SCREEN_HEIGHT // 2 + height, img, scale)
+
+
+start_button = create_button('img/start_btn.png', 130, -150, 1)
+exit_button = create_button('img/exit_btn.png', 110, 50, 1)
+restart_button = create_button('img/restart_btn.png', 100, - 50, 2)
 
 background = Background()
 
