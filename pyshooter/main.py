@@ -35,17 +35,6 @@ PINK = (235, 65, 54)
 
 
 class Assets:
-    _tile_list = None
-
-    @staticmethod
-    def get_image_tile(tile):
-        if Assets._tile_list is None:
-            Assets._tile_list = []
-            for x in range(TILE_TYPES):
-                img = load(f'img/Tile/{x}.png')
-                img = pygame.transform.scale(img, (TILE_SIZE, TILE_SIZE))
-                Assets._tile_list.append(img)
-        return Assets._tile_list[tile]
 
     @staticmethod
     def load_animation_soldier(char_type: str, scale: int) -> []:
@@ -404,7 +393,7 @@ def load_level(level: int):
     for y, row in enumerate(_data):
         for x, tile in enumerate(row):
             if tile >= 0:
-                img = Assets.get_image_tile(tile)
+                img = resources.gfx_scaled(f'tile/{tile}.png', (TILE_SIZE, TILE_SIZE))
                 img_rect = img.get_rect()
                 img_rect.x = x * TILE_SIZE
                 img_rect.y = y * TILE_SIZE
@@ -454,11 +443,11 @@ class HealthBar():
         # show ammo
         self.draw_text(screen, 'AMMO: ', font, WHITE, 10, 35)
         for x in range(player.ammo):
-            screen.blit(resources.gfx('icons/bullet.png',True), (90 + (x * 10), 40))
+            screen.blit(resources.gfx_alpha('icons/bullet.png'), (90 + (x * 10), 40))
         # show grenades
         self.draw_text(screen, 'GRENADES: ', font, WHITE, 10, 60)
         for x in range(player.grenades):
-            screen.blit(resources.gfx('icons/grenade.png',True), (135 + (x * 15), 60))
+            screen.blit(resources.gfx_alpha('icons/grenade.png'), (135 + (x * 15), 60))
 
     @staticmethod
     def draw_text(screen: Surface, text, font, text_col, x, y):
@@ -470,7 +459,7 @@ class Bullet(ScrollSprite):
 
     @staticmethod
     def create(x, y, direction):
-        return Bullet(resources.gfx('icons/bullet.png',True), x, y, direction)
+        return Bullet(resources.gfx_alpha('icons/bullet.png'), x, y, direction)
 
     def __init__(self, image, x, y, direction):
         super().__init__(image, image.get_rect())
@@ -505,7 +494,7 @@ class Bullet(ScrollSprite):
 class Grenade(ScrollSprite):
     @staticmethod
     def create(x, y, direction):
-        return Grenade(resources.gfx('icons/grenade.png',True), x, y, direction)
+        return Grenade(resources.gfx_alpha('icons/grenade.png'), x, y, direction)
 
     def __init__(self, image, x, y, direction):
         super().__init__(image, image.get_rect())
