@@ -13,7 +13,6 @@ from button import Button
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = int(SCREEN_WIDTH * 0.8)
 
-
 # set framerate
 FPS = 60
 
@@ -26,19 +25,13 @@ TILE_SIZE = SCREEN_HEIGHT // ROWS
 TILE_TYPES = 21
 MAX_LEVELS = 3
 
-screen_scroll = 0
-bg_scroll = 0
-level = 1
-level_length = 0
-start_game = False
-start_intro = False
-
-# define player action variables
-moving_left = False
-moving_right = False
-shoot = False
-grenade = False
-grenade_thrown = False
+# define colours
+BG = (144, 201, 120)
+RED = (255, 0, 0)
+WHITE = (255, 255, 255)
+GREEN = (0, 255, 0)
+BLACK = (0, 0, 0)
+PINK = (235, 65, 54)
 
 
 class Assets:
@@ -95,7 +88,6 @@ class Assets:
             images.append(img)
         return images
 
-
     @staticmethod
     def load_image_alpha(name: str) -> Surface:
         return load(name).convert_alpha()
@@ -105,23 +97,6 @@ class Assets:
         sound = Sound(name)
         sound.set_volume(volume)
         return sound
-
-
-
-
-# define colours
-BG = (144, 201, 120)
-RED = (255, 0, 0)
-WHITE = (255, 255, 255)
-GREEN = (0, 255, 0)
-BLACK = (0, 0, 0)
-PINK = (235, 65, 54)
-
-
-
-def draw_text(screen: Surface, text, font, text_col, x, y):
-    img = font.render(text, True, text_col)
-    screen.blit(img, (x, y))
 
 
 class Background:
@@ -493,6 +468,20 @@ class HealthBar():
         pygame.draw.rect(screen, RED, (self.x, self.y, 150, 20))
         pygame.draw.rect(screen, GREEN, (self.x, self.y, 150 * ratio, 20))
 
+        # show ammo
+        self.draw_text(screen, 'AMMO: ', font, WHITE, 10, 35)
+        for x in range(player.ammo):
+            screen.blit(Assets.get_image_bullet(), (90 + (x * 10), 40))
+        # show grenades
+        self.draw_text(screen, 'GRENADES: ', font, WHITE, 10, 60)
+        for x in range(player.grenades):
+            screen.blit(Assets.get_image_grenade(), (135 + (x * 15), 60))
+
+    @staticmethod
+    def draw_text(screen: Surface, text, font, text_col, x, y):
+        img = font.render(text, True, text_col)
+        screen.blit(img, (x, y))
+
 
 class Bullet(ScrollSprite):
 
@@ -670,6 +659,20 @@ restart_button = create_button('img/restart_btn.png', 100, - 50, 2)
 background = Background()
 background.play_music()
 
+screen_scroll = 0
+bg_scroll = 0
+level = 1
+level_length = 0
+start_game = False
+start_intro = False
+
+# define player action variables
+moving_left = False
+moving_right = False
+shoot = False
+grenade = False
+grenade_thrown = False
+
 # create sprite groups
 platform_group = pygame.sprite.Group()
 enemy_group = pygame.sprite.Group()
@@ -706,14 +709,6 @@ while run:
         draw_world(screen)
         # show player health
         health_bar.draw(screen, player.health)
-        # show ammo
-        draw_text(screen, 'AMMO: ', font, WHITE, 10, 35)
-        for x in range(player.ammo):
-            screen.blit(Assets.get_image_bullet(), (90 + (x * 10), 40))
-        # show grenades
-        draw_text(screen, 'GRENADES: ', font, WHITE, 10, 60)
-        for x in range(player.grenades):
-            screen.blit(Assets.get_image_grenade(), (135 + (x * 15), 60))
 
         player.update()
         player.draw(screen)
