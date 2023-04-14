@@ -8,8 +8,6 @@ from pygame.image import load
 from pygame.mixer import Sound, music
 from pygame.sprite import Sprite
 
-from button import Button
-
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = int(SCREEN_WIDTH * 0.8)
 
@@ -635,10 +633,39 @@ intro_fade = ScreenFade(1, BLACK, 4)
 death_fade = ScreenFade(2, PINK, 4)
 
 
-@staticmethod  # create buttons
-def create_button(name: str, width: int, height: int, scale: int) -> Button:
-    img = Assets.load_image_alpha(name)
-    return Button(SCREEN_WIDTH // 2 - width, SCREEN_HEIGHT // 2 + height, img, scale)
+class Button():
+    @staticmethod
+    def create(name: str, width: int, height: int, scale: int):
+        img = Assets.load_image_alpha(name)
+        return Button(SCREEN_WIDTH // 2 - width, SCREEN_HEIGHT // 2 + height, img, scale)
+
+    def __init__(self, x, y, image, scale):
+        self.width = image.get_width()
+        self.height = image.get_height()
+        self.image = pygame.transform.scale(image, (int(self.width * scale), int(self.height * scale)))
+        self.rect = self.image.get_rect()
+        self.rect.topleft = (x, y)
+        self.clicked = False
+
+    def draw(self, surface):
+        action = False
+
+        # get mouse position
+        pos = pygame.mouse.get_pos()
+
+        # check mouseover and clicked conditions
+        if self.rect.collidepoint(pos):
+            if pygame.mouse.get_pressed()[0] == 1 and self.clicked == False:
+                action = True
+                self.clicked = True
+
+        if pygame.mouse.get_pressed()[0] == 0:
+            self.clicked = False
+
+        # draw button
+        surface.blit(self.image, (self.rect.x, self.rect.y))
+
+        return action
 
 
 mixer.init()
@@ -649,9 +676,9 @@ pygame.display.set_caption('Shooter')
 # define font
 font = pygame.font.SysFont('Futura', 30)
 
-start_button = create_button('img/start_btn.png', 130, -150, 1)
-exit_button = create_button('img/exit_btn.png', 110, 50, 1)
-restart_button = create_button('img/restart_btn.png', 100, - 50, 2)
+start_button = Button.create('img/start_btn.png', 130, -150, 1)
+exit_button = Button.create('img/exit_btn.png', 110, 50, 1)
+restart_button = Button.create('img/restart_btn.png', 100, - 50, 2)
 
 background = Background()
 background.play_music()
