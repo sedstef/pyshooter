@@ -119,7 +119,7 @@ class Soldier(ScrollSprite):
         self.idling = False
         self.idling_counter = 0
 
-        self.image = self.get_animation()[self.frame_index]
+        self.image = self.get_animation_image()
         self.rect = self.image.get_rect()
         self.rect.center = (x, y)
         self.width = self.image.get_width()
@@ -127,6 +127,9 @@ class Soldier(ScrollSprite):
 
     def get_animation(self):
         return resources.animation(f'{self.char_type}/{self.action}', self.scale)
+
+    def get_animation_image(self):
+        return self.get_animation()[self.frame_index]
 
     def update(self):
         self.update_animation()
@@ -233,7 +236,7 @@ class Soldier(ScrollSprite):
                 self.update_action(ActionType.IDLE)
                 self.idling = True
                 self.idling_counter = 50
-            # check if the ai in near the player
+            # check if the AI in near the player
             if self.vision.colliderect(player.rect):
                 # stop running and face the player
                 self.update_action(ActionType.IDLE)
@@ -249,7 +252,7 @@ class Soldier(ScrollSprite):
                     self.move(ai_moving_left, ai_moving_right)
                     self.update_action(ActionType.RUN)
                     self.move_counter += 1
-                    # update ai vision as the enemy moves
+                    # update AI vision as the enemy moves
                     self.vision.center = (self.rect.centerx + 75 * self.direction, self.rect.centery)
 
                     if self.move_counter > TILE_SIZE:
@@ -267,7 +270,7 @@ class Soldier(ScrollSprite):
         # update animation
         ANIMATION_COOLDOWN = 100
         # update image depending on current frame
-        self.image = self.get_animation()[self.frame_index]
+        self.image = self.get_animation_image()
         # check if enough time has passed since the last update
         if pygame.time.get_ticks() - self.update_time > ANIMATION_COOLDOWN:
             self.update_time = pygame.time.get_ticks()
