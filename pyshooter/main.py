@@ -70,12 +70,6 @@ class Assets:
 
 class Background:
 
-    def __init__(self) -> None:
-        self._sky_img = Assets.load_image_alpha('img/Background/sky_cloud.png')
-        self._mountain_img = Assets.load_image_alpha('img/Background/mountain.png')
-        self._pine1_img = Assets.load_image_alpha('img/Background/pine1.png')
-        self._pine2_img = Assets.load_image_alpha('img/Background/pine2.png')
-
     def play_music(self):
         # load music and sounds
         music.load('audio/music2.mp3')
@@ -83,15 +77,20 @@ class Background:
         music.play(-1, 0.0, 5000)
 
     def draw(self, screen: Surface):
+        sky = resources.gfx_alpha('background/sky_cloud.png')
+        mountain = resources.gfx_alpha('background/mountain.png')
+        pine1 = resources.gfx_alpha('background/pine1.png')
+        pine2 = resources.gfx_alpha('background/pine2.png')
+
+        width = sky.get_width()
         screen.fill(BG)
-        width = self._sky_img.get_width()
         for x in range(5):
-            screen.blit(self._sky_img, ((x * width) - bg_scroll * 0.5, 0))
-            screen.blit(self._mountain_img,
-                        ((x * width) - bg_scroll * 0.6, SCREEN_HEIGHT - self._mountain_img.get_height() - 300))
-            screen.blit(self._pine1_img,
-                        ((x * width) - bg_scroll * 0.7, SCREEN_HEIGHT - self._pine1_img.get_height() - 150))
-            screen.blit(self._pine2_img, ((x * width) - bg_scroll * 0.8, SCREEN_HEIGHT - self._pine2_img.get_height()))
+            screen.blit(sky, ((x * width) - bg_scroll * 0.5, 0))
+            screen.blit(mountain,
+                        ((x * width) - bg_scroll * 0.6, SCREEN_HEIGHT - mountain.get_height() - 300))
+            screen.blit(pine1,
+                        ((x * width) - bg_scroll * 0.7, SCREEN_HEIGHT - pine1.get_height() - 150))
+            screen.blit(pine2, ((x * width) - bg_scroll * 0.8, SCREEN_HEIGHT - pine2.get_height()))
 
 
 class ScrollSprite(Sprite):
