@@ -113,6 +113,7 @@ class Soldier(ScrollSprite):
         self.frame_index = 0
         self.action = ActionType.IDLE
         self.update_time = pygame.time.get_ticks()
+
         # ai specific variables
         self.move_counter = 0
         self.vision = pygame.Rect(0, 0, 150, 20)
@@ -301,10 +302,15 @@ class Soldier(ScrollSprite):
         screen.blit(pygame.transform.flip(self.image, self.flip, False), self.rect)
 
 
+class Enemy(Soldier):
+    def __init__(self, x, y, scale, speed, ammo, grenades):
+        super().__init__('enemy', x, y, scale, speed, ammo, grenades)
+
+
 class Player(Soldier):
 
-    def __init__(self, char_type, x, y, scale, speed, ammo, grenades):
-        super().__init__(char_type, x, y, scale, speed, ammo, grenades)
+    def __init__(self, x, y, scale, speed, ammo, grenades):
+        super().__init__('player', x, y, scale, speed, ammo, grenades)
 
     def add_health(self):
         self.health += 25
@@ -366,10 +372,10 @@ def load_level(level: int):
                 elif tile >= 11 and tile <= 14:
                     decoration_group.add(Tile(img, img_rect))
                 elif tile == 15:  # create player
-                    player = Player('player', x * TILE_SIZE, y * TILE_SIZE, 1.65, 5, 20, 5)
+                    player = Player(x * TILE_SIZE, y * TILE_SIZE, 1.65, 5, 20, 5)
                     health_bar = HealthBar(10, 10, player.health)
                 elif tile == 16:  # create enemies
-                    enemy = Soldier('enemy', x * TILE_SIZE, y * TILE_SIZE, 1.65, 2, 20, 0)
+                    enemy = Enemy(x * TILE_SIZE, y * TILE_SIZE, 1.65, 2, 20, 0)
                     enemy_group.add(enemy)
                 elif tile == 17:  # create ammo box
                     item_box_group.add(CollectBox(img, img_rect, lambda player: player.add_ammo()))
