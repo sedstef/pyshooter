@@ -2,7 +2,7 @@ import os
 
 import pygame
 from pygame import Surface
-from pygame.mixer import Sound
+from pygame.mixer import Sound, music
 from pygame.transform import scale
 
 _ASSETS_PATH = "assets"
@@ -13,7 +13,7 @@ _GFX_CACHE = {}
 
 def assets_path():
     """
-    Get the path for the data directory.
+    Get the path for the assets directory.
     :return: The path.
     """
     if os.path.exists(_ASSETS_PATH):
@@ -21,7 +21,7 @@ def assets_path():
     else:
         path = os.path.join(
             os.path.dirname(os.path.realpath(__file__)),
-            _ASSETS_PATH,
+            _ASSETS_PATH
         )
     return path
 
@@ -81,3 +81,19 @@ def sfx(snd, volume=0.0) -> Sound:
     if volume:
         asound.set_volume(volume)
     return asound
+
+
+def music_play(snd, volume, loops=0, start=0.0, fade_ms=0):
+    """
+    Load and play a music file from the music directory.
+    :param snd:
+    :param volume:
+    :param loops:
+    :param start:
+    :param fade_ms:
+    """
+
+    path = os.path.join(assets_path(), "music", snd)
+    music.load(path)
+    music.set_volume(volume)
+    music.play(loops, start, fade_ms)

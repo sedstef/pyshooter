@@ -5,7 +5,6 @@ import random
 import pygame
 from pygame import mixer, Surface, Rect
 from pygame.image import load
-from pygame.mixer import Sound, music
 from pygame.sprite import Sprite
 
 from pyshooter import resources
@@ -69,12 +68,6 @@ class Assets:
 
 
 class Background:
-
-    def play_music(self):
-        # load music and sounds
-        music.load('audio/music2.mp3')
-        music.set_volume(0.3)
-        music.play(-1, 0.0, 5000)
 
     def draw(self, screen: Surface):
         sky = resources.gfx_alpha('background/sky_cloud.png')
@@ -650,8 +643,9 @@ start_button = Button.create('img/start_btn.png', 130, -150, 1)
 exit_button = Button.create('img/exit_btn.png', 110, 50, 1)
 restart_button = Button.create('img/restart_btn.png', 100, - 50, 2)
 
+resources.music_play('music2.mp3', 0.3, -1, 0.0, 5000)
+
 background = Background()
-background.play_music()
 
 screen_scroll = 0
 bg_scroll = 0
