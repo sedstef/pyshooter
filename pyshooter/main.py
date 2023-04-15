@@ -1,11 +1,9 @@
 import csv
-import os
 import random
 from enum import StrEnum
 
 import pygame
 from pygame import mixer, Surface, Rect
-from pygame.image import load
 from pygame.sprite import Sprite
 
 from pyshooter import resources
@@ -32,15 +30,6 @@ WHITE = (255, 255, 255)
 GREEN = (0, 255, 0)
 BLACK = (0, 0, 0)
 PINK = (235, 65, 54)
-
-
-
-class Assets:
-
-
-    @staticmethod
-    def load_image_alpha(name: str) -> Surface:
-        return load(name).convert_alpha()
 
 
 class Background:
@@ -139,7 +128,6 @@ class Soldier(ScrollSprite):
 
     def get_animation(self):
         return resources.animation(f'{self.char_type}/{self.action}', self.scale)
-
 
     def update(self):
         self.update_animation()
@@ -586,7 +574,7 @@ death_fade = ScreenFade(2, PINK, 4)
 class Button():
     @staticmethod
     def create(name: str, width: int, height: int, scale: int):
-        img = Assets.load_image_alpha(name)
+        img = resources.gfx_alpha(name)
         return Button(SCREEN_WIDTH // 2 - width, SCREEN_HEIGHT // 2 + height, img, scale)
 
     def __init__(self, x, y, image, scale):
@@ -626,12 +614,11 @@ pygame.display.set_caption('Shooter')
 # define font
 font = pygame.font.SysFont('Futura', 30)
 
-start_button = Button.create('img/start_btn.png', 130, -150, 1)
-exit_button = Button.create('img/exit_btn.png', 110, 50, 1)
-restart_button = Button.create('img/restart_btn.png', 100, - 50, 2)
+start_button = Button.create('buttons/start.png', 130, -150, 1)
+exit_button = Button.create('buttons/exit.png', 110, 50, 1)
+restart_button = Button.create('buttons/restart.png', 100, - 50, 2)
 
 resources.music_play('music2.mp3', 0.3, -1, 0.0, 5000)
-
 background = Background()
 
 screen_scroll = 0
