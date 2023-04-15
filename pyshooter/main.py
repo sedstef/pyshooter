@@ -1,4 +1,3 @@
-import csv
 import random
 from enum import StrEnum
 
@@ -343,17 +342,7 @@ def reset_level():
 
 def load_level(level: int):
     # create empty tile list
-    _data = []
-    for row in range(ROWS):
-        r = [-1] * COLS
-        _data.append(r)
-
-    # load in level data and create world
-    with open(f'level{level}_data.csv', newline='') as csvfile:
-        reader = csv.reader(csvfile, delimiter=',')
-        for x, row in enumerate(reader):
-            for y, tile in enumerate(row):
-                _data[x][y] = int(tile)
+    _data = resources.scene(level, ROWS, COLS)
 
     global level_length
     level_length = len(_data[0])

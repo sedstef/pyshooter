@@ -1,5 +1,5 @@
 import os
-
+import csv
 import pygame
 from pygame import Surface
 from pygame.mixer import music
@@ -26,6 +26,21 @@ def assets_path():
         )
     return path
 
+def scene(level:int, ROWS:int, COLS:int):
+    _data = []
+    for row in range(ROWS):
+        r = [-1] * COLS
+        _data.append(r)
+
+    # load in level data and create world
+    path = os.path.join(assets_path(), "scenes", f'{level}.csv')
+
+    with open( path, newline='') as csvfile:
+        reader = csv.reader(csvfile, delimiter=',')
+        for x, row in enumerate(reader):
+            for y, tile in enumerate(row):
+                _data[x][y] = int(tile)
+    return _data
 
 def music_play(snd, volume, loops=0, start=0.0, fade_ms=0):
     """

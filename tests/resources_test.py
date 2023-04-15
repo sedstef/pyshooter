@@ -41,6 +41,9 @@ class ResourcesTest(unittest.TestCase):
         expected = resources.animation('explosion', 0.5)
         self.assertListEqual(result, expected)
 
+    def test_scene_loadable(self):
+        scene = resources.scene(1, 16, 180)
+        self.assertTrue(scene)
 
 if __name__ == '__main__':
     unittest.main()
