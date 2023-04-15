@@ -67,12 +67,6 @@ class Assets:
     def load_image_alpha(name: str) -> Surface:
         return load(name).convert_alpha()
 
-    @staticmethod
-    def load_sound(name: str, volume: float) -> Sound:
-        sound = Sound(name)
-        sound.set_volume(volume)
-        return sound
-
 
 class Background:
 
@@ -166,7 +160,7 @@ class Soldier(ScrollSprite):
         self.rect.center = (x, y)
         self.width = self.image.get_width()
         self.height = self.image.get_height()
-        self._shot_fx = Assets.load_sound('audio/shot.wav', 0.5)
+        self._shot_fx = resources.sfx('shot.wav', 0.5)
 
     def update(self):
         self.update_animation()
@@ -342,7 +336,7 @@ class Player(Soldier):
 
     def __init__(self, char_type, x, y, scale, speed, ammo, grenades):
         super().__init__(char_type, x, y, scale, speed, ammo, grenades)
-        self._jump_fx = Assets.load_sound('audio/jump.wav', 0.25)
+        self._jump_fx = resources.sfx('jump.wav', 0.25)
 
     def add_health(self):
         self.health += 25
@@ -505,7 +499,7 @@ class Grenade(ScrollSprite):
         self.width = self.image.get_width()
         self.height = self.image.get_height()
         self.direction = direction
-        self._grenade_fx = Assets.load_sound('audio/grenade.wav', 0.5)
+        self._grenade_fx = resources.sfx('audio/grenade.wav', 0.5)
 
     def update(self):
         super().update()
