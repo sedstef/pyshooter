@@ -33,6 +33,14 @@ class ResourcesTest(unittest.TestCase):
         sfx = resources.sfx('grenade.wav',0.5)
         self.assertTrue(sfx)
 
+    def test_animation_loaded_twice(self):
+        # arrange + act
+        result = resources.animation('explosion',0.5)
+
+        # assert
+        expected = resources.animation('explosion', 0.5)
+        self.assertListEqual(result, expected)
+
 
 if __name__ == '__main__':
     unittest.main()

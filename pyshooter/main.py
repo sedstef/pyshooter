@@ -1,6 +1,7 @@
 import csv
 import os
 import random
+from enum import StrEnum
 
 import pygame
 from pygame import mixer, Surface, Rect
@@ -33,25 +34,9 @@ BLACK = (0, 0, 0)
 PINK = (235, 65, 54)
 
 
+
 class Assets:
 
-    @staticmethod
-    def load_animation_soldier(char_type: str, scale: int) -> []:
-        animation_list = []
-
-        # load all images for the players
-        animation_types = ['Idle', 'Run', 'Jump', 'Death']
-        for animation in animation_types:
-            # reset temporary list of images
-            temp_list = []
-            # count number of files in the folder
-            num_of_frames = len(os.listdir(f'img/{char_type}/{animation}'))
-            for i in range(num_of_frames):
-                img = Assets.load_image_alpha(f'img/{char_type}/{animation}/{i}.png')
-                img = pygame.transform.scale(img, (int(img.get_width() * scale), int(img.get_height() * scale)))
-                temp_list.append(img)
-            animation_list.append(temp_list)
-        return animation_list
 
     @staticmethod
     def load_image_alpha(name: str) -> Surface:
@@ -110,6 +95,13 @@ class CollectBox(ScrollSprite):
             self.kill()
 
 
+class ActionType(StrEnum):
+    IDLE = 'idle'
+    RUN = 'run'
+    JUMP = 'jump'
+    DEATH = 'death'
+
+
 class Soldier(ScrollSprite):
     def __init__(self, char_type, x, y, scale, speed, ammo, grenades):
         # TODO init ScrollSprite
@@ -128,9 +120,9 @@ class Soldier(ScrollSprite):
         self._jumping = False
         self.in_air = True
         self.flip = False
-        self.animation_list = Assets.load_animation_soldier(char_type, scale)
+        self.scale = scale
         self.frame_index = 0
-        self.action = 0
+        self.action = ActionType.IDLE
         self.update_time = pygame.time.get_ticks()
         # ai specific variables
         self.move_counter = 0
@@ -138,12 +130,16 @@ class Soldier(ScrollSprite):
         self.idling = False
         self.idling_counter = 0
 
-        self.image = self.animation_list[self.action][self.frame_index]
+        self.image = self.get_animation()[self.frame_index]
         self.rect = self.image.get_rect()
         self.rect.center = (x, y)
         self.width = self.image.get_width()
         self.height = self.image.get_height()
         self._shot_fx = resources.sfx('shot.wav', 0.5)
+
+    def get_animation(self):
+        return resources.animation(f'{self.char_type}/{self.action}', self.scale)
+
 
     def update(self):
         self.update_animation()
@@ -247,13 +243,13 @@ class Soldier(ScrollSprite):
     def ai(self):
         if self.alive and player.alive:
             if self.idling == False and random.randint(1, 200) == 1:
-                self.update_action(0)  # 0: idle
+                self.update_action(ActionType.IDLE)
                 self.idling = True
                 self.idling_counter = 50
             # check if the ai in near the player
             if self.vision.colliderect(player.rect):
                 # stop running and face the player
-                self.update_action(0)  # 0: idle
+                self.update_action(ActionType.IDLE)
                 # shoot
                 self.shoot()
             else:
@@ -264,7 +260,7 @@ class Soldier(ScrollSprite):
                         ai_moving_right = False
                     ai_moving_left = not ai_moving_right
                     self.move(ai_moving_left, ai_moving_right)
-                    self.update_action(1)  # 1: run
+                    self.update_action(ActionType.RUN)
                     self.move_counter += 1
                     # update ai vision as the enemy moves
                     self.vision.center = (self.rect.centerx + 75 * self.direction, self.rect.centery)
@@ -284,19 +280,19 @@ class Soldier(ScrollSprite):
         # update animation
         ANIMATION_COOLDOWN = 100
         # update image depending on current frame
-        self.image = self.animation_list[self.action][self.frame_index]
+        self.image = self.get_animation()[self.frame_index]
         # check if enough time has passed since the last update
         if pygame.time.get_ticks() - self.update_time > ANIMATION_COOLDOWN:
             self.update_time = pygame.time.get_ticks()
             self.frame_index += 1
         # if the animation has run out the reset back to the start
-        if self.frame_index >= len(self.animation_list[self.action]):
-            if self.action == 3:
-                self.frame_index = len(self.animation_list[self.action]) - 1
+        if self.frame_index >= len(self.get_animation()):
+            if self.action == ActionType.DEATH:
+                self.frame_index = len(self.get_animation()) - 1
             else:
                 self.frame_index = 0
 
-    def update_action(self, new_action):
+    def update_action(self, new_action: ActionType):
         # check if the new action is different to the previous one
         if new_action != self.action:
             self.action = new_action
@@ -309,7 +305,7 @@ class Soldier(ScrollSprite):
             self.health = 0
             self.speed = 0
             self.alive = False
-            self.update_action(3)
+            self.update_action(ActionType.DEATH)
 
     def draw(self, screen: Surface):
         screen.blit(pygame.transform.flip(self.image, self.flip, False), self.rect)
@@ -735,11 +731,11 @@ while run:
                 player.grenades -= 1
                 grenade_thrown = True
             if player.in_air:
-                player.update_action(2)  # 2: jump
+                player.update_action(ActionType.JUMP)
             elif moving_left or moving_right:
-                player.update_action(1)  # 1: run
+                player.update_action(ActionType.RUN)
             else:
-                player.update_action(0)  # 0: idle
+                player.update_action(ActionType.IDLE)
             screen_scroll, level_complete = player.move(moving_left, moving_right)
             bg_scroll -= screen_scroll
             # check if player has completed the level
