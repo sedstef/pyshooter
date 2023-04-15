@@ -43,41 +43,42 @@ def music_play(snd, volume, loops=0, start=0.0, fade_ms=0):
     music.play(loops, start, fade_ms)
 
 
-def sfx(snd, volume=0.0) -> pygame.mixer.Sound:
+def sfx_play(snd, volume=0.0) -> None:
+    sound = _sfx(snd)
+    sound.set_volume(volume)
+    sound.play()
+
+def _sfx(name) -> pygame.mixer.Sound:
     """
     Load and return a sound effect from the sound directory.
-    :param snd:
-    :param volume:
+    :param name:
     :return: The sound.
     """
-    sfx_key = snd
-    if sfx_key in _SFX_CACHE:
-        asound = _SFX_CACHE[sfx_key]
-    else:
-        path = os.path.join(assets_path(), "sounds", snd)
-        asound = pygame.mixer.Sound(path)
-        _SFX_CACHE[sfx_key] = asound
+    key = name
+    if key in _SFX_CACHE:
+        return _SFX_CACHE[key]
 
-    if volume:
-        asound.set_volume(volume)
-    return asound
+    path = os.path.join(assets_path(), "sounds", name)
+    sound = pygame.mixer.Sound(path)
+    _SFX_CACHE[key] = sound
+    return sound
 
 
-def _gfx(image, key: str, converter) -> Surface:
+def _gfx(name, key: str, converter) -> Surface:
     """
     Load and return an image surface from the image data directory.
-    :param image: image file name.
+    :param name: image file name.
     :return: Image surface.
     """
-    gfx_key = (image, key)
-    if gfx_key in _GFX_CACHE:
-        return _GFX_CACHE[gfx_key]
+    key = (name, key)
+    if key in _GFX_CACHE:
+        return _GFX_CACHE[key]
 
-    path = os.path.join(assets_path(), image)
+    path = os.path.join(assets_path(), name)
     img = pygame.image.load(path)
     if converter is not None:
         img = converter(img)
-    _GFX_CACHE[gfx_key] = img
+    _GFX_CACHE[key] = img
     return img
 
 
@@ -112,9 +113,9 @@ def gfx_scaled_factor(name, factor) -> Surface:
 
 
 def animation(name, scale: int) -> []:
-    animation_key = (name, scale)
-    if animation_key in _ANIMATION_CACHE:
-        return _ANIMATION_CACHE[animation_key]
+    key = (name, scale)
+    if key in _ANIMATION_CACHE:
+        return _ANIMATION_CACHE[key]
 
     path = os.path.join("animations", name)
     images = []
@@ -122,5 +123,5 @@ def animation(name, scale: int) -> []:
     for i in range(frames):
         img = gfx_scaled_factor(os.path.join(path, f'{i}.png'), scale)
         images.append(img)
-    _ANIMATION_CACHE[animation_key] = images
+    _ANIMATION_CACHE[key] = images
     return images

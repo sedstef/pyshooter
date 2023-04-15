@@ -124,7 +124,6 @@ class Soldier(ScrollSprite):
         self.rect.center = (x, y)
         self.width = self.image.get_width()
         self.height = self.image.get_height()
-        self._shot_fx = resources.sfx('shot.wav', 0.5)
 
     def get_animation(self):
         return resources.animation(f'{self.char_type}/{self.action}', self.scale)
@@ -226,7 +225,7 @@ class Soldier(ScrollSprite):
             bullet_group.add(bullet)
             # reduce ammo
             self.ammo -= 1
-            self._shot_fx.play()
+            resources.sfx_play('shot.wav', 0.5)
 
     def ai(self):
         if self.alive and player.alive:
@@ -303,7 +302,6 @@ class Player(Soldier):
 
     def __init__(self, char_type, x, y, scale, speed, ammo, grenades):
         super().__init__(char_type, x, y, scale, speed, ammo, grenades)
-        self._jump_fx = resources.sfx('jump.wav', 0.25)
 
     def add_health(self):
         self.health += 25
@@ -318,7 +316,7 @@ class Player(Soldier):
 
     def jump(self):
         self._jumping = True
-        self._jump_fx.play()
+        resources.sfx_play('jump.wav', 0.25)
 
 
 # function to reset level
@@ -466,7 +464,6 @@ class Grenade(ScrollSprite):
         self.width = self.image.get_width()
         self.height = self.image.get_height()
         self.direction = direction
-        self._grenade_fx = resources.sfx('grenade.wav', 0.5)
 
     def update(self):
         super().update()
@@ -500,7 +497,8 @@ class Grenade(ScrollSprite):
         self.timer -= 1
         if self.timer <= 0:
             self.kill()
-            self._grenade_fx.play()
+            resources.sfx_play('grenade.wav', 0.5)
+
             explosion = Explosion(self.rect.x, self.rect.y, 0.5)
             explosion_group.add(explosion)
             # do damage to anyone that is nearby
