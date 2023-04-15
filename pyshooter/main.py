@@ -54,15 +54,6 @@ class Assets:
         return animation_list
 
     @staticmethod
-    def load_animation_explosions(scale: int) -> []:
-        images = []
-        for num in range(1, 6):
-            img = Assets.load_image_alpha(f'img/explosion/exp{num}.png')
-            img = pygame.transform.scale(img, (int(img.get_width() * scale), int(img.get_height() * scale)))
-            images.append(img)
-        return images
-
-    @staticmethod
     def load_image_alpha(name: str) -> Surface:
         return load(name).convert_alpha()
 
@@ -491,7 +482,7 @@ class Grenade(ScrollSprite):
         self.width = self.image.get_width()
         self.height = self.image.get_height()
         self.direction = direction
-        self._grenade_fx = resources.sfx('audio/grenade.wav', 0.5)
+        self._grenade_fx = resources.sfx('grenade.wav', 0.5)
 
     def update(self):
         super().update()
@@ -542,7 +533,7 @@ class Explosion(ScrollSprite):
     def __init__(self, x, y, scale):
         # TODO init ScrollSprite
         pygame.sprite.Sprite.__init__(self)
-        self.images = Assets.load_animation_explosions(scale)
+        self.images = resources.animation('explosion', scale)
         self.frame_index = 0
         self.image = self.images[self.frame_index]
         self.rect = self.image.get_rect()
