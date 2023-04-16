@@ -264,8 +264,6 @@ class Player(Soldier):
         self.grenade = False
         self.grenade_thrown = False
 
-        self._level_complete = False
-
     def add_health(self):
         self.health += 25
         if self.health > self.max_health:
@@ -282,7 +280,7 @@ class Player(Soldier):
         resources.sfx_play('jump.wav', 0.25)
 
     def update_alive(self,view:View, background: Background, platform_group: Group, water_group: Group, bullet_group: Group,
-                     grenade_group: Group, exit_group: Group):
+                     grenade_group: Group):
         # shoot bullets
         if self.shooting:
             self.shoot(bullet_group)
@@ -302,14 +300,8 @@ class Player(Soldier):
         else:
             self.update_action(ActionType.IDLE)
 
-        return self.move(view,self.moving_left, self.moving_right, background, platform_group,
-                         water_group), self.level_complete(exit_group)
+        return self.move(view,self.moving_left, self.moving_right, background, platform_group, water_group)
 
-    def level_complete(self, exit_group: Group):
-        # check for collision with exit
-        if pygame.sprite.spritecollide(self, exit_group, False):
-            self._level_complete = True
-        return self._level_complete
 
 
 class Enemy(Soldier):
@@ -393,9 +385,12 @@ class Level:
         self.water_group = pygame.sprite.Group()
         self.exit_group = pygame.sprite.Group()
 
+        self._complete = False
+
     # function to reset level
     def reset_level(self):
         self.view = View()
+        self._complete = False
 
         self.platform_group.empty()
         self.enemy_group.empty()
@@ -458,6 +453,11 @@ class Level:
         self.water_group.update(self.view)
         self.exit_group.update(self.view)
 
+    def is_complete(self):
+        # check for player collision with exit
+        if pygame.sprite.spritecollide(self.player, self.exit_group, False):
+            self._complete = True
+        return self._complete
 
 class HealthBar():
     def __init__(self, x, y, max_health):
@@ -772,12 +772,12 @@ while run:
 
         # update player actions
         if level.player.alive:
-            level.view.screen_scroll, level_complete = level.player.update_alive(level.view, level.background, level.platform_group,
+            level.view.screen_scroll = level.player.update_alive(level.view, level.background, level.platform_group,
                                                                                  level.water_group, level.bullet_group,
-                                                                                 level.grenade_group, level.exit_group)
+                                                                                 level.grenade_group)
             level.background.bg_scroll -= level.view.screen_scroll
             # check if player has completed the level
-            if level_complete:
+            if level.is_complete():
                 start_intro = True
                 level_nr += 1
                 level.background.bg_scroll = 0
