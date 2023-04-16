@@ -562,11 +562,6 @@ class ScreenFade():
         return fade_complete
 
 
-# create screen fades
-intro_fade = ScreenFade(1, BLACK, 4)
-death_fade = ScreenFade(2, PINK, 4)
-
-
 class Button():
     @staticmethod
     def create(name: str, width: int, height: int, scale: int):
@@ -606,6 +601,10 @@ mixer.init()
 pygame.init()
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption('Shooter')
+
+# create screen fades
+intro_fade = ScreenFade(1, BLACK, 4)
+death_fade = ScreenFade(2, PINK, 4)
 
 # define font
 font = pygame.font.SysFont('Futura', 30)
