@@ -66,7 +66,7 @@ class ScrollSprite(Sprite):
         self.image = image
         self.rect = rect
 
-    def update(self):
+    def update(self,view: View):
         self.rect.x += view.screen_scroll
 
 
@@ -123,7 +123,7 @@ class Soldier(ScrollSprite):
     def get_animation_image(self):
         return self.get_animation()[self.frame_index]
 
-    def update(self):
+    def update(self, view: View):
         self.update_animation()
         self.check_alive()
         # update cooldown
@@ -316,10 +316,10 @@ class Enemy(Soldier):
     def __init__(self, x, y, scale, speed, ammo, grenades):
         super().__init__('enemy', x, y, scale, speed, ammo, grenades)
 
-    def update(self, background: Background, platform_group: Group, water_group: Group, player: Player,
+    def update(self, view: View, background: Background, platform_group: Group, water_group: Group, player: Player,
                bullet_group: Group):
         self.ai(background, platform_group, water_group, player, bullet_group)
-        super().update()
+        super().update(view)
 
     def ai(self, background: Background, platform_group: Group, water_group: Group, player: Player,
            bullet_group: Group):
@@ -364,8 +364,8 @@ class CollectBox(ScrollSprite):
         super().__init__(image, rect)
         self._collector = collector
 
-    def update(self, player: Player):
-        super().update()
+    def update(self,view: View, player: Player):
+        super().update(view)
 
         # check if the player has picked up the box
         if pygame.sprite.collide_rect(self, player):
@@ -480,8 +480,8 @@ class Bullet(ScrollSprite):
         self.rect.center = (x, y)
         self.direction = direction
 
-    def update(self, platform_group: Group, player: Player, enemy_group: Group, bullet_group: Group):
-        super().update()
+    def update(self,view: View, platform_group: Group, player: Player, enemy_group: Group, bullet_group: Group):
+        super().update(view)
         # move bullet
         self.rect.x += (self.direction * self.speed)
         # check if bullet has gone off screen
@@ -519,8 +519,8 @@ class Grenade(ScrollSprite):
         self.height = self.image.get_height()
         self.direction = direction
 
-    def update(self, platform_group: Group, player: Player, enemy_group: Group, explosion_group: Group):
-        super().update()
+    def update(self, view: View, platform_group: Group, player: Player, enemy_group: Group, explosion_group: Group):
+        super().update(view)
         self.vel_y += GRAVITY
         dx = self.direction * self.speed
         dy = self.vel_y
@@ -576,8 +576,8 @@ class Explosion(ScrollSprite):
         self.rect.center = (x, y)
         self.counter = 0
 
-    def update(self):
-        super().update()
+    def update(self,view: View):
+        super().update(view)
 
         EXPLOSION_SPEED = 4
         # update explosion amimation
@@ -727,20 +727,20 @@ while run:
         if exit_button.draw(screen):
             run = False
     else:
-        level.player.update()
+        level.player.update(view)
 
         for enemy in level.enemy_group:
-            enemy.update(level.background, level.platform_group, level.water_group, level.player, level.bullet_group)
+            enemy.update(view, level.background, level.platform_group, level.water_group, level.player, level.bullet_group)
 
         # recalculate positions
-        level.bullet_group.update(level.platform_group, level.player, level.enemy_group, level.bullet_group)
-        level.grenade_group.update(level.platform_group, level.player, level.enemy_group, level.explosion_group)
-        level.explosion_group.update()
-        level.item_box_group.update(level.player)
-        level.platform_group.update()
-        level.decoration_group.update()
-        level.water_group.update()
-        level.exit_group.update()
+        level.bullet_group.update(view, level.platform_group, level.player, level.enemy_group, level.bullet_group)
+        level.grenade_group.update(view, level.platform_group, level.player, level.enemy_group, level.explosion_group)
+        level.explosion_group.update(view)
+        level.item_box_group.update(view,level.player)
+        level.platform_group.update(view)
+        level.decoration_group.update(view)
+        level.water_group.update(view)
+        level.exit_group.update(view)
 
         # draw screen
         level.background.draw(screen)
