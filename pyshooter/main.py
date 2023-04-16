@@ -3,9 +3,14 @@ from enum import StrEnum
 
 import pygame
 from pygame import mixer, Surface, Rect
+from pygame.locals import (
+    KEYDOWN,
+    K_ESCAPE,
+    QUIT
+)
 from pygame.sprite import Sprite, Group
 
-from pyshooter import resources
+from pyshooter import resources, keyboard
 
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = int(SCREEN_WIDTH * 0.8)
@@ -130,7 +135,8 @@ class Soldier(ScrollSprite):
         if self.shoot_cooldown > 0:
             self.shoot_cooldown -= 1
 
-    def move(self, view:View, moving_left, moving_right, background: Background, platform_group: Group, water_group: Group):
+    def move(self, view: View, moving_left, moving_right, background: Background, platform_group: Group,
+             water_group: Group):
         # reset movement variables
         screen_scroll = 0
         dx = 0
@@ -279,7 +285,8 @@ class Player(Soldier):
         self._jumping = True
         resources.sfx_play('jump.wav', 0.25)
 
-    def update_alive(self,view:View, background: Background, platform_group: Group, water_group: Group, bullet_group: Group,
+    def update_alive(self, view: View, background: Background, platform_group: Group, water_group: Group,
+                     bullet_group: Group,
                      grenade_group: Group):
         # shoot bullets
         if self.shooting:
@@ -300,8 +307,7 @@ class Player(Soldier):
         else:
             self.update_action(ActionType.IDLE)
 
-        return self.move(view,self.moving_left, self.moving_right, background, platform_group, water_group)
-
+        return self.move(view, self.moving_left, self.moving_right, background, platform_group, water_group)
 
 
 class Enemy(Soldier):
@@ -333,7 +339,7 @@ class Enemy(Soldier):
                     else:
                         ai_moving_right = False
                     ai_moving_left = not ai_moving_right
-                    self.move(view,ai_moving_left, ai_moving_right, background, platform_group, water_group)
+                    self.move(view, ai_moving_left, ai_moving_right, background, platform_group, water_group)
                     self.update_action(ActionType.RUN)
                     self.move_counter += 1
                     # update AI vision as the enemy moves
@@ -459,6 +465,7 @@ class Level:
             self._complete = True
         return self._complete
 
+
 class HealthBar():
     def __init__(self, x, y, max_health):
         self.x = x
@@ -479,11 +486,11 @@ class HealthBar():
         for x in range(player.ammo):
             screen.blit(resources.gfx_alpha('icons/bullet.png'), (90 + (x * 10), 40))
         # show grenades
-        self.draw_text(screen, 'GRENADES: ',  WHITE, 10, 60)
+        self.draw_text(screen, 'GRENADES: ', WHITE, 10, 60)
         for x in range(player.grenades):
             screen.blit(resources.gfx_alpha('icons/grenade.png'), (135 + (x * 15), 60))
 
-    def draw_text(self, screen: Surface, text,  text_col, x, y):
+    def draw_text(self, screen: Surface, text, text_col, x, y):
         img = self.font.render(text, True, text_col)
         screen.blit(img, (x, y))
 
@@ -672,6 +679,7 @@ class Button():
 
         return action
 
+
 def main():
     mixer.init()
     pygame.init()
@@ -681,7 +689,6 @@ def main():
     # create screen fades
     intro_fade = ScreenFade(1, BLACK, 4)
     death_fade = ScreenFade(2, PINK, 4)
-
 
     start_button = Button.create('buttons/start.png', 130, -150, 1)
     exit_button = Button.create('buttons/exit.png', 110, 50, 1)
@@ -698,40 +705,15 @@ def main():
 
     clock = pygame.time.Clock()
 
-    run = True
-    while run:
+    running = True
+    while running:
         clock.tick(FPS)
 
         for event in pygame.event.get():
-            # quit game
-            if event.type == pygame.QUIT:
-                run = False
-            # keyboard presses
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
-                    run = False
-                if event.key == pygame.K_a:
-                    level.player.moving_left = True
-                if event.key == pygame.K_d:
-                    level.player.moving_right = True
-                if event.key == pygame.K_SPACE:
-                    level.player.shooting = True
-                if event.key == pygame.K_q:
-                    level.player.grenade = True
-                if event.key == pygame.K_w and level.player.alive:
-                    level.player.jump()
-
-            # keyboard button released
-            if event.type == pygame.KEYUP:
-                if event.key == pygame.K_a:
-                    level.player.moving_left = False
-                if event.key == pygame.K_d:
-                    level.player.moving_right = False
-                if event.key == pygame.K_SPACE:
-                    level.player.shooting = False
-                if event.key == pygame.K_q:
-                    level.player.grenade = False
-                    level.player.grenade_thrown = False
+            if (event.type == KEYDOWN and event.key == K_ESCAPE) or event.type == QUIT:
+                # quit game
+                running = False
+            keyboard.handle(event, level.player)
 
         if start_game == False:
             # draw menu
@@ -741,7 +723,7 @@ def main():
                 start_game = True
                 start_intro = True
             if exit_button.draw(screen):
-                run = False
+                running = False
         else:
             level.update()
 
@@ -773,8 +755,8 @@ def main():
             # update player actions
             if level.player.alive:
                 level.view.screen_scroll = level.player.update_alive(level.view, level.background, level.platform_group,
-                                                                                     level.water_group, level.bullet_group,
-                                                                                     level.grenade_group)
+                                                                     level.water_group, level.bullet_group,
+                                                                     level.grenade_group)
                 level.background.bg_scroll -= level.view.screen_scroll
                 # check if player has completed the level
                 if level.is_complete():
@@ -797,6 +779,7 @@ def main():
         pygame.display.update()
 
     pygame.quit()
+
 
 if __name__ == '__main__':
     main()
