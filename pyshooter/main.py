@@ -202,7 +202,7 @@ class Soldier(ScrollSprite):
 
         return screen_scroll, level_complete
 
-    def shoot(self,bullet_group: Group):
+    def shoot(self, bullet_group: Group):
         if self.shoot_cooldown == 0 and self.ammo > 0:
             self.shoot_cooldown = 20
             bullet = Bullet.create(self.rect.centerx + (0.75 * self.rect.size[0] * self.direction),
@@ -212,7 +212,6 @@ class Soldier(ScrollSprite):
             # reduce ammo
             self.ammo -= 1
             resources.sfx_play('shot.wav', 0.5)
-
 
     def update_animation(self):
         # update animation
@@ -249,7 +248,6 @@ class Soldier(ScrollSprite):
         screen.blit(pygame.transform.flip(self.image, self.flip, False), self.rect)
 
 
-
 class Player(Soldier):
 
     def __init__(self, x, y, scale, speed, ammo, grenades):
@@ -277,7 +275,7 @@ class Player(Soldier):
         self._jumping = True
         resources.sfx_play('jump.wav', 0.25)
 
-    def update_alive(self,bullet_group: Group, grenade_group: Group):
+    def update_alive(self, bullet_group: Group, grenade_group: Group):
         # shoot bullets
         if self.shooting:
             self.shoot(bullet_group)
@@ -298,12 +296,13 @@ class Player(Soldier):
             self.update_action(ActionType.IDLE)
         return self.move(self.moving_left, self.moving_right)
 
+
 class Enemy(Soldier):
     def __init__(self, x, y, scale, speed, ammo, grenades):
         super().__init__('enemy', x, y, scale, speed, ammo, grenades)
 
-    def update(self, player: Player,bullet_group: Group):
-        self.ai(player,bullet_group)
+    def update(self, player: Player, bullet_group: Group):
+        self.ai(player, bullet_group)
         super().update()
 
     def ai(self, player: Player, bullet_group: Group):
@@ -496,7 +495,7 @@ class Grenade(ScrollSprite):
         self.height = self.image.get_height()
         self.direction = direction
 
-    def update(self, platform_group: Group, player: Player, enemy_group: Group,explosion_group:  Group):
+    def update(self, platform_group: Group, player: Player, enemy_group: Group, explosion_group: Group):
         super().update()
         self.vel_y += GRAVITY
         dx = self.direction * self.speed
@@ -673,8 +672,38 @@ clock = pygame.time.Clock()
 
 run = True
 while run:
-
     clock.tick(FPS)
+
+    for event in pygame.event.get():
+        # quit game
+        if event.type == pygame.QUIT:
+            run = False
+        # keyboard presses
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                run = False
+            if event.key == pygame.K_a:
+                player.moving_left = True
+            if event.key == pygame.K_d:
+                player.moving_right = True
+            if event.key == pygame.K_SPACE:
+                player.shooting = True
+            if event.key == pygame.K_q:
+                player.grenade = True
+            if event.key == pygame.K_w and player.alive:
+                player.jump()
+
+        # keyboard button released
+        if event.type == pygame.KEYUP:
+            if event.key == pygame.K_a:
+                player.moving_left = False
+            if event.key == pygame.K_d:
+                player.moving_right = False
+            if event.key == pygame.K_SPACE:
+                player.shooting = False
+            if event.key == pygame.K_q:
+                player.grenade = False
+                player.grenade_thrown = False
 
     if start_game == False:
         # draw menu
@@ -686,21 +715,10 @@ while run:
         if exit_button.draw(screen):
             run = False
     else:
-        # update background
-        background.draw(screen)
-        # draw world map
-        draw_world(screen)
-        # show player health
-        health_bar.draw(screen, player)
-
         player.update()
-        player.draw(screen)
 
         for enemy in enemy_group:
             enemy.update(player, bullet_group)
-
-        for enemy in enemy_group:
-            enemy.draw(screen)
 
         # recalculate positions
         bullet_group.update(platform_group, player, enemy_group)
@@ -711,14 +729,24 @@ while run:
         water_group.update()
         exit_group.update()
 
-        # draw groups
-        bullet_group.draw(screen)
-        grenade_group.draw(screen)
-        explosion_group.draw(screen)
+        # draw screen
+        background.draw(screen)
+        draw_world(screen)
         item_box_group.draw(screen)
         decoration_group.draw(screen)
         water_group.draw(screen)
         exit_group.draw(screen)
+
+        for enemy in enemy_group:
+            enemy.draw(screen)
+
+        player.draw(screen)
+
+        bullet_group.draw(screen)
+        grenade_group.draw(screen)
+        explosion_group.draw(screen)
+
+        health_bar.draw(screen, player)
 
         # show intro
         if start_intro == True:
@@ -748,38 +776,6 @@ while run:
                     reset_level()
 
                     player, health_bar = load_level(level)
-
-
-    for event in pygame.event.get():
-        # quit game
-        if event.type == pygame.QUIT:
-            run = False
-        # keyboard presses
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_a:
-                player.moving_left = True
-            if event.key == pygame.K_d:
-                player.moving_right = True
-            if event.key == pygame.K_SPACE:
-                player.shooting = True
-            if event.key == pygame.K_q:
-                player.grenade = True
-            if event.key == pygame.K_w and player.alive:
-                player.jump()
-            if event.key == pygame.K_ESCAPE:
-                run = False
-
-        # keyboard button released
-        if event.type == pygame.KEYUP:
-            if event.key == pygame.K_a:
-                player.moving_left = False
-            if event.key == pygame.K_d:
-                player.moving_right = False
-            if event.key == pygame.K_SPACE:
-                player.shooting = False
-            if event.key == pygame.K_q:
-                player.grenade = False
-                player.grenade_thrown = False
 
     pygame.display.update()
 
