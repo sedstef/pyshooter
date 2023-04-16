@@ -459,6 +459,12 @@ class Level:
         self.water_group.update(self.view)
         self.exit_group.update(self.view)
 
+    def update_player(self):
+        self.view.screen_scroll = self.player.update_alive(self.view, self.background, self.platform_group,
+                                                           self.water_group, self.bullet_group,
+                                                           self.grenade_group)
+        self.background.bg_scroll -= self.view.screen_scroll
+
     def is_complete(self):
         # check for player collision with exit
         if pygame.sprite.spritecollide(self.player, self.exit_group, False):
@@ -754,10 +760,7 @@ def main():
 
             # update player actions
             if level.player.alive:
-                level.view.screen_scroll = level.player.update_alive(level.view, level.background, level.platform_group,
-                                                                     level.water_group, level.bullet_group,
-                                                                     level.grenade_group)
-                level.background.bg_scroll -= level.view.screen_scroll
+                level.update_player()
                 # check if player has completed the level
                 if level.is_complete():
                     start_intro = True
