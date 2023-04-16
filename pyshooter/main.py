@@ -121,7 +121,7 @@ class Soldier(ScrollSprite):
         if self.shoot_cooldown > 0:
             self.shoot_cooldown -= 1
 
-    def move(self, moving_left, moving_right):
+    def move(self, moving_left, moving_right, platform_group: Group):
         # reset movement variables
         screen_scroll = 0
         dx = 0
@@ -272,7 +272,7 @@ class Player(Soldier):
         self._jumping = True
         resources.sfx_play('jump.wav', 0.25)
 
-    def update_alive(self, bullet_group: Group, grenade_group: Group, exit_group: Group):
+    def update_alive(self, platform_group: Group, bullet_group: Group, grenade_group: Group, exit_group: Group):
         # shoot bullets
         if self.shooting:
             self.shoot(bullet_group)
@@ -292,8 +292,7 @@ class Player(Soldier):
         else:
             self.update_action(ActionType.IDLE)
 
-
-        return self.move(self.moving_left, self.moving_right), self.level_complete(exit_group)
+        return self.move(self.moving_left, self.moving_right, platform_group), self.level_complete(exit_group)
 
     def level_complete(self, exit_group: Group):
         # check for collision with exit
@@ -306,11 +305,11 @@ class Enemy(Soldier):
     def __init__(self, x, y, scale, speed, ammo, grenades):
         super().__init__('enemy', x, y, scale, speed, ammo, grenades)
 
-    def update(self, player: Player, bullet_group: Group):
-        self.ai(player, bullet_group)
+    def update(self, platform_group: Group, player: Player, bullet_group: Group):
+        self.ai(platform_group, player, bullet_group)
         super().update()
 
-    def ai(self, player: Player, bullet_group: Group):
+    def ai(self, platform_group: Group, player: Player, bullet_group: Group):
         if self.alive and player.alive:
             if self.idling == False and random.randint(1, 200) == 1:
                 self.update_action(ActionType.IDLE)
@@ -329,7 +328,7 @@ class Enemy(Soldier):
                     else:
                         ai_moving_right = False
                     ai_moving_left = not ai_moving_right
-                    self.move(ai_moving_left, ai_moving_right)
+                    self.move(ai_moving_left, ai_moving_right, platform_group)
                     self.update_action(ActionType.RUN)
                     self.move_counter += 1
                     # update AI vision as the enemy moves
@@ -723,7 +722,7 @@ while run:
         player.update()
 
         for enemy in enemy_group:
-            enemy.update(player, bullet_group)
+            enemy.update(platform_group, player, bullet_group)
 
         # recalculate positions
         bullet_group.update(platform_group, player, enemy_group)
@@ -761,7 +760,7 @@ while run:
 
         # update player actions
         if player.alive:
-            screen_scroll, level_complete = player.update_alive(bullet_group, grenade_group, exit_group)
+            screen_scroll, level_complete = player.update_alive(platform_group, bullet_group, grenade_group, exit_group)
             bg_scroll -= screen_scroll
             # check if player has completed the level
             if level_complete:
