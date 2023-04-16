@@ -414,12 +414,6 @@ def load_level(level: int):
     return player, health_bar
 
 
-def draw_world(screen: Surface):
-    for tile in platform_group:
-        tile.rect[0] += screen_scroll
-        screen.blit(tile.image, tile.rect)
-
-
 class HealthBar():
     def __init__(self, x, y, max_health):
         self.x = x
@@ -729,13 +723,14 @@ while run:
         grenade_group.update(platform_group, player, enemy_group, explosion_group)
         explosion_group.update()
         item_box_group.update(player)
+        platform_group.update()
         decoration_group.update()
         water_group.update()
         exit_group.update()
 
         # draw screen
         background.draw(screen)
-        draw_world(screen)
+        platform_group.draw(screen)
         item_box_group.draw(screen)
         decoration_group.draw(screen)
         water_group.draw(screen)
