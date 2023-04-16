@@ -121,7 +121,7 @@ class Soldier(ScrollSprite):
         if self.shoot_cooldown > 0:
             self.shoot_cooldown -= 1
 
-    def move(self, moving_left, moving_right, platform_group: Group):
+    def move(self, moving_left, moving_right, platform_group: Group, water_group: Group):
         # reset movement variables
         screen_scroll = 0
         dx = 0
@@ -272,7 +272,7 @@ class Player(Soldier):
         self._jumping = True
         resources.sfx_play('jump.wav', 0.25)
 
-    def update_alive(self, platform_group: Group, bullet_group: Group, grenade_group: Group, exit_group: Group):
+    def update_alive(self, platform_group: Group,water_group: Group, bullet_group: Group, grenade_group: Group, exit_group: Group):
         # shoot bullets
         if self.shooting:
             self.shoot(bullet_group)
@@ -292,7 +292,7 @@ class Player(Soldier):
         else:
             self.update_action(ActionType.IDLE)
 
-        return self.move(self.moving_left, self.moving_right, platform_group), self.level_complete(exit_group)
+        return self.move(self.moving_left, self.moving_right, platform_group,water_group), self.level_complete(exit_group)
 
     def level_complete(self, exit_group: Group):
         # check for collision with exit
@@ -305,11 +305,11 @@ class Enemy(Soldier):
     def __init__(self, x, y, scale, speed, ammo, grenades):
         super().__init__('enemy', x, y, scale, speed, ammo, grenades)
 
-    def update(self, platform_group: Group, player: Player, bullet_group: Group):
-        self.ai(platform_group, player, bullet_group)
+    def update(self, platform_group: Group, water_group: Group, player: Player, bullet_group: Group):
+        self.ai(platform_group,water_group, player, bullet_group)
         super().update()
 
-    def ai(self, platform_group: Group, player: Player, bullet_group: Group):
+    def ai(self, platform_group: Group, water_group: Group, player: Player, bullet_group: Group):
         if self.alive and player.alive:
             if self.idling == False and random.randint(1, 200) == 1:
                 self.update_action(ActionType.IDLE)
@@ -328,7 +328,7 @@ class Enemy(Soldier):
                     else:
                         ai_moving_right = False
                     ai_moving_left = not ai_moving_right
-                    self.move(ai_moving_left, ai_moving_right, platform_group)
+                    self.move(ai_moving_left, ai_moving_right, platform_group, water_group)
                     self.update_action(ActionType.RUN)
                     self.move_counter += 1
                     # update AI vision as the enemy moves
@@ -362,56 +362,67 @@ class CollectBox(ScrollSprite):
             # delete the item box
             self.kill()
 
+class Level:
 
-# function to reset level
-def reset_level():
-    platform_group.empty()
-    enemy_group.empty()
-    bullet_group.empty()
-    grenade_group.empty()
-    explosion_group.empty()
-    item_box_group.empty()
-    decoration_group.empty()
-    water_group.empty()
-    exit_group.empty()
+    def __init__(self) -> None:
+        # create sprite groups
+        self.platform_group = pygame.sprite.Group()
+        self.enemy_group = pygame.sprite.Group()
+        self.bullet_group = pygame.sprite.Group()
+        self.grenade_group = pygame.sprite.Group()
+        self.explosion_group = pygame.sprite.Group()
+        self.item_box_group = pygame.sprite.Group()
+        self.decoration_group = pygame.sprite.Group()
+        self.water_group = pygame.sprite.Group()
+        self.exit_group = pygame.sprite.Group()
+
+    # function to reset level
+    def reset_level(self):
+        self.platform_group.empty()
+        self.enemy_group.empty()
+        self.bullet_group.empty()
+        self.grenade_group.empty()
+        self.explosion_group.empty()
+        self.item_box_group.empty()
+        self.decoration_group.empty()
+        self.water_group.empty()
+        self.exit_group.empty()
 
 
-def load_level(level: int):
-    # create empty tile list
-    _data = resources.scene(level, ROWS, COLS)
+    def load_level(self, level: int):
+        # create empty tile list
+        _data = resources.scene(level, ROWS, COLS)
 
-    global level_length
-    level_length = len(_data[0])
-    # iterate through each value in level data file
-    for y, row in enumerate(_data):
-        for x, tile in enumerate(row):
-            if tile >= 0:
-                img = resources.gfx_scaled(f'tile/{tile}.png', (TILE_SIZE, TILE_SIZE))
-                img_rect = img.get_rect()
-                img_rect.x = x * TILE_SIZE
-                img_rect.y = y * TILE_SIZE
-                if tile >= 0 and tile <= 8:
-                    platform_group.add(Tile(img, img_rect))
-                elif tile >= 9 and tile <= 10:
-                    water_group.add(Tile(img, img_rect))
-                elif tile >= 11 and tile <= 14:
-                    decoration_group.add(Tile(img, img_rect))
-                elif tile == 15:  # create player
-                    player = Player(x * TILE_SIZE, y * TILE_SIZE, 1.65, 5, 20, 5)
-                    health_bar = HealthBar(10, 10, player.health)
-                elif tile == 16:  # create enemies
-                    enemy = Enemy(x * TILE_SIZE, y * TILE_SIZE, 1.65, 2, 20, 0)
-                    enemy_group.add(enemy)
-                elif tile == 17:  # create ammo box
-                    item_box_group.add(CollectBox(img, img_rect, lambda player: player.add_ammo()))
-                elif tile == 18:  # create grenade box
-                    item_box_group.add(CollectBox(img, img_rect, lambda player: player.add_grenade()))
-                elif tile == 19:  # create health box
-                    item_box_group.add(CollectBox(img, img_rect, lambda player: player.add_health()))
-                elif tile == 20:  # create exit
-                    exit_group.add(Tile(img, img_rect))
-
-    return player, health_bar
+        global level_length
+        level_length = len(_data[0])
+        # iterate through each value in level data file
+        for y, row in enumerate(_data):
+            for x, tile in enumerate(row):
+                if tile >= 0:
+                    img = resources.gfx_scaled(f'tile/{tile}.png', (TILE_SIZE, TILE_SIZE))
+                    img_rect = img.get_rect()
+                    img_rect.x = x * TILE_SIZE
+                    img_rect.y = y * TILE_SIZE
+                    if tile >= 0 and tile <= 8:
+                        self.platform_group.add(Tile(img, img_rect))
+                    elif tile >= 9 and tile <= 10:
+                        self.water_group.add(Tile(img, img_rect))
+                    elif tile >= 11 and tile <= 14:
+                        self.decoration_group.add(Tile(img, img_rect))
+                    elif tile == 15:  # create player
+                        self.player = Player(x * TILE_SIZE, y * TILE_SIZE, 1.65, 5, 20, 5)
+                        self.health_bar = HealthBar(10, 10, self.player.health)
+                    elif tile == 16:  # create enemies
+                        enemy = Enemy(x * TILE_SIZE, y * TILE_SIZE, 1.65, 2, 20, 0)
+                        self.enemy_group.add(enemy)
+                    elif tile == 17:  # create ammo box
+                        self.item_box_group.add(CollectBox(img, img_rect, lambda player: player.add_ammo()))
+                    elif tile == 18:  # create grenade box
+                        self.item_box_group.add(CollectBox(img, img_rect, lambda player: player.add_grenade()))
+                    elif tile == 19:  # create health box
+                        self.item_box_group.add(CollectBox(img, img_rect, lambda player: player.add_health()))
+                    elif tile == 20:  # create exit
+                        self.exit_group.add(Tile(img, img_rect))
 
 
 class HealthBar():
@@ -454,7 +465,7 @@ class Bullet(ScrollSprite):
         self.rect.center = (x, y)
         self.direction = direction
 
-    def update(self, platform_group: Group, player: Player, enemy_group: Group):
+    def update(self, platform_group: Group, player: Player, enemy_group: Group, bullet_group: Group):
         super().update()
         # move bullet
         self.rect.x += (self.direction * self.speed)
@@ -648,23 +659,13 @@ background = Background()
 
 screen_scroll = 0
 bg_scroll = 0
-level = 1
+level_nr = 1
 level_length = 0
 start_game = False
 start_intro = False
 
-# create sprite groups
-platform_group = pygame.sprite.Group()
-enemy_group = pygame.sprite.Group()
-bullet_group = pygame.sprite.Group()
-grenade_group = pygame.sprite.Group()
-explosion_group = pygame.sprite.Group()
-item_box_group = pygame.sprite.Group()
-decoration_group = pygame.sprite.Group()
-water_group = pygame.sprite.Group()
-exit_group = pygame.sprite.Group()
-
-player, health_bar = load_level(level)
+level = Level()
+level.load_level(level_nr)
 
 clock = pygame.time.Clock()
 
@@ -681,27 +682,27 @@ while run:
             if event.key == pygame.K_ESCAPE:
                 run = False
             if event.key == pygame.K_a:
-                player.moving_left = True
+                level.player.moving_left = True
             if event.key == pygame.K_d:
-                player.moving_right = True
+                level.player.moving_right = True
             if event.key == pygame.K_SPACE:
-                player.shooting = True
+                level.player.shooting = True
             if event.key == pygame.K_q:
-                player.grenade = True
-            if event.key == pygame.K_w and player.alive:
-                player.jump()
+                level.player.grenade = True
+            if event.key == pygame.K_w and level.player.alive:
+                level.player.jump()
 
         # keyboard button released
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_a:
-                player.moving_left = False
+                level.player.moving_left = False
             if event.key == pygame.K_d:
-                player.moving_right = False
+                level.player.moving_right = False
             if event.key == pygame.K_SPACE:
-                player.shooting = False
+                level.player.shooting = False
             if event.key == pygame.K_q:
-                player.grenade = False
-                player.grenade_thrown = False
+                level.player.grenade = False
+                level.player.grenade_thrown = False
 
     if start_game == False:
         # draw menu
@@ -713,39 +714,39 @@ while run:
         if exit_button.draw(screen):
             run = False
     else:
-        player.update()
+        level.player.update()
 
-        for enemy in enemy_group:
-            enemy.update(platform_group, player, bullet_group)
+        for enemy in level.enemy_group:
+            enemy.update(level.platform_group, level.water_group, level.player, level.bullet_group)
 
         # recalculate positions
-        bullet_group.update(platform_group, player, enemy_group)
-        grenade_group.update(platform_group, player, enemy_group, explosion_group)
-        explosion_group.update()
-        item_box_group.update(player)
-        platform_group.update()
-        decoration_group.update()
-        water_group.update()
-        exit_group.update()
+        level.bullet_group.update(level.platform_group, level.player, level.enemy_group, level.bullet_group)
+        level.grenade_group.update(level.platform_group, level.player, level.enemy_group, level.explosion_group)
+        level.explosion_group.update()
+        level.item_box_group.update(level.player)
+        level.platform_group.update()
+        level.decoration_group.update()
+        level.water_group.update()
+        level.exit_group.update()
 
         # draw screen
         background.draw(screen)
-        platform_group.draw(screen)
-        item_box_group.draw(screen)
-        decoration_group.draw(screen)
-        water_group.draw(screen)
-        exit_group.draw(screen)
+        level.platform_group.draw(screen)
+        level.item_box_group.draw(screen)
+        level.decoration_group.draw(screen)
+        level.water_group.draw(screen)
+        level.exit_group.draw(screen)
 
-        for enemy in enemy_group:
+        for enemy in level.enemy_group:
             enemy.draw(screen)
 
-        player.draw(screen)
+        level.player.draw(screen)
 
-        bullet_group.draw(screen)
-        grenade_group.draw(screen)
-        explosion_group.draw(screen)
+        level.bullet_group.draw(screen)
+        level.grenade_group.draw(screen)
+        level.explosion_group.draw(screen)
 
-        health_bar.draw(screen, player)
+        level.health_bar.draw(screen, level.player)
 
         # show intro
         if start_intro == True:
@@ -754,17 +755,17 @@ while run:
                 intro_fade.fade_counter = 0
 
         # update player actions
-        if player.alive:
-            screen_scroll, level_complete = player.update_alive(platform_group, bullet_group, grenade_group, exit_group)
+        if level.player.alive:
+            screen_scroll, level_complete = level.player.update_alive(level.platform_group, level.water_group, level.bullet_group, level. grenade_group, level. exit_group)
             bg_scroll -= screen_scroll
             # check if player has completed the level
             if level_complete:
                 start_intro = True
-                level += 1
+                level_nr += 1
                 bg_scroll = 0
-                reset_level()
+                level.reset_level()
 
-                player, health_bar = load_level(level)
+                level.load_level(level_nr)
         else:
             screen_scroll = 0
             if death_fade.draw(screen):
@@ -772,9 +773,9 @@ while run:
                     death_fade.fade_counter = 0
                     start_intro = True
                     bg_scroll = 0
-                    reset_level()
+                    level. reset_level()
 
-                    player, health_bar = load_level(level)
+                    level.load_level(level_nr)
 
     pygame.display.update()
 
