@@ -672,128 +672,131 @@ class Button():
 
         return action
 
+def main():
+    mixer.init()
+    pygame.init()
+    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+    pygame.display.set_caption('Shooter')
 
-mixer.init()
-pygame.init()
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption('Shooter')
-
-# create screen fades
-intro_fade = ScreenFade(1, BLACK, 4)
-death_fade = ScreenFade(2, PINK, 4)
+    # create screen fades
+    intro_fade = ScreenFade(1, BLACK, 4)
+    death_fade = ScreenFade(2, PINK, 4)
 
 
-start_button = Button.create('buttons/start.png', 130, -150, 1)
-exit_button = Button.create('buttons/exit.png', 110, 50, 1)
-restart_button = Button.create('buttons/restart.png', 100, - 50, 2)
+    start_button = Button.create('buttons/start.png', 130, -150, 1)
+    exit_button = Button.create('buttons/exit.png', 110, 50, 1)
+    restart_button = Button.create('buttons/restart.png', 100, - 50, 2)
 
-resources.music_play('music2.mp3', 0.3, -1, 0.0, 5000)
+    resources.music_play('music2.mp3', 0.3, -1, 0.0, 5000)
 
-level_nr = 1
-start_game = False
-start_intro = False
+    level_nr = 1
+    start_game = False
+    start_intro = False
 
-level = Level()
-level.load_level(level_nr)
+    level = Level()
+    level.load_level(level_nr)
 
-clock = pygame.time.Clock()
+    clock = pygame.time.Clock()
 
-run = True
-while run:
-    clock.tick(FPS)
+    run = True
+    while run:
+        clock.tick(FPS)
 
-    for event in pygame.event.get():
-        # quit game
-        if event.type == pygame.QUIT:
-            run = False
-        # keyboard presses
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_ESCAPE:
+        for event in pygame.event.get():
+            # quit game
+            if event.type == pygame.QUIT:
                 run = False
-            if event.key == pygame.K_a:
-                level.player.moving_left = True
-            if event.key == pygame.K_d:
-                level.player.moving_right = True
-            if event.key == pygame.K_SPACE:
-                level.player.shooting = True
-            if event.key == pygame.K_q:
-                level.player.grenade = True
-            if event.key == pygame.K_w and level.player.alive:
-                level.player.jump()
+            # keyboard presses
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    run = False
+                if event.key == pygame.K_a:
+                    level.player.moving_left = True
+                if event.key == pygame.K_d:
+                    level.player.moving_right = True
+                if event.key == pygame.K_SPACE:
+                    level.player.shooting = True
+                if event.key == pygame.K_q:
+                    level.player.grenade = True
+                if event.key == pygame.K_w and level.player.alive:
+                    level.player.jump()
 
-        # keyboard button released
-        if event.type == pygame.KEYUP:
-            if event.key == pygame.K_a:
-                level.player.moving_left = False
-            if event.key == pygame.K_d:
-                level.player.moving_right = False
-            if event.key == pygame.K_SPACE:
-                level.player.shooting = False
-            if event.key == pygame.K_q:
-                level.player.grenade = False
-                level.player.grenade_thrown = False
+            # keyboard button released
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_a:
+                    level.player.moving_left = False
+                if event.key == pygame.K_d:
+                    level.player.moving_right = False
+                if event.key == pygame.K_SPACE:
+                    level.player.shooting = False
+                if event.key == pygame.K_q:
+                    level.player.grenade = False
+                    level.player.grenade_thrown = False
 
-    if start_game == False:
-        # draw menu
-        screen.fill(BG)
-        # add buttons
-        if start_button.draw(screen):
-            start_game = True
-            start_intro = True
-        if exit_button.draw(screen):
-            run = False
-    else:
-        level.update()
-
-        # draw screen
-        level.background.draw(screen)
-        level.platform_group.draw(screen)
-        level.item_box_group.draw(screen)
-        level.decoration_group.draw(screen)
-        level.water_group.draw(screen)
-        level.exit_group.draw(screen)
-
-        for enemy in level.enemy_group:
-            enemy.draw(screen)
-
-        level.player.draw(screen)
-
-        level.bullet_group.draw(screen)
-        level.grenade_group.draw(screen)
-        level.explosion_group.draw(screen)
-
-        level.health_bar.draw(screen, level.player)
-
-        # show intro
-        if start_intro == True:
-            if intro_fade.draw(screen):
-                start_intro = False
-                intro_fade.fade_counter = 0
-
-        # update player actions
-        if level.player.alive:
-            level.view.screen_scroll = level.player.update_alive(level.view, level.background, level.platform_group,
-                                                                                 level.water_group, level.bullet_group,
-                                                                                 level.grenade_group)
-            level.background.bg_scroll -= level.view.screen_scroll
-            # check if player has completed the level
-            if level.is_complete():
+        if start_game == False:
+            # draw menu
+            screen.fill(BG)
+            # add buttons
+            if start_button.draw(screen):
+                start_game = True
                 start_intro = True
-                level_nr += 1
-                level.background.bg_scroll = 0
-                level.reset_level()
-
-                level.load_level(level_nr)
+            if exit_button.draw(screen):
+                run = False
         else:
-            if death_fade.draw(screen):
-                if restart_button.draw(screen):
-                    death_fade.fade_counter = 0
+            level.update()
+
+            # draw screen
+            level.background.draw(screen)
+            level.platform_group.draw(screen)
+            level.item_box_group.draw(screen)
+            level.decoration_group.draw(screen)
+            level.water_group.draw(screen)
+            level.exit_group.draw(screen)
+
+            for enemy in level.enemy_group:
+                enemy.draw(screen)
+
+            level.player.draw(screen)
+
+            level.bullet_group.draw(screen)
+            level.grenade_group.draw(screen)
+            level.explosion_group.draw(screen)
+
+            level.health_bar.draw(screen, level.player)
+
+            # show intro
+            if start_intro == True:
+                if intro_fade.draw(screen):
+                    start_intro = False
+                    intro_fade.fade_counter = 0
+
+            # update player actions
+            if level.player.alive:
+                level.view.screen_scroll = level.player.update_alive(level.view, level.background, level.platform_group,
+                                                                                     level.water_group, level.bullet_group,
+                                                                                     level.grenade_group)
+                level.background.bg_scroll -= level.view.screen_scroll
+                # check if player has completed the level
+                if level.is_complete():
                     start_intro = True
+                    level_nr += 1
                     level.background.bg_scroll = 0
                     level.reset_level()
 
                     level.load_level(level_nr)
+            else:
+                if death_fade.draw(screen):
+                    if restart_button.draw(screen):
+                        death_fade.fade_counter = 0
+                        start_intro = True
+                        level.background.bg_scroll = 0
+                        level.reset_level()
 
-    pygame.display.update()
+                        level.load_level(level_nr)
 
-pygame.quit()
+        pygame.display.update()
+
+    pygame.quit()
+
+if __name__ == '__main__':
+    main()
