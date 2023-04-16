@@ -66,7 +66,7 @@ class ScrollSprite(Sprite):
         self.image = image
         self.rect = rect
 
-    def update(self,view: View):
+    def update(self, view: View):
         self.rect.x += view.screen_scroll
 
 
@@ -318,10 +318,10 @@ class Enemy(Soldier):
 
     def update(self, view: View, background: Background, platform_group: Group, water_group: Group, player: Player,
                bullet_group: Group):
-        self.ai(background, platform_group, water_group, player, bullet_group)
+        self.ai(view, background, platform_group, water_group, player, bullet_group)
         super().update(view)
 
-    def ai(self, background: Background, platform_group: Group, water_group: Group, player: Player,
+    def ai(self, view: View, background: Background, platform_group: Group, water_group: Group, player: Player,
            bullet_group: Group):
         if self.alive and player.alive:
             if self.idling == False and random.randint(1, 200) == 1:
@@ -364,7 +364,7 @@ class CollectBox(ScrollSprite):
         super().__init__(image, rect)
         self._collector = collector
 
-    def update(self,view: View, player: Player):
+    def update(self, view: View, player: Player):
         super().update(view)
 
         # check if the player has picked up the box
@@ -379,6 +379,7 @@ class CollectBox(ScrollSprite):
 class Level:
 
     def __init__(self) -> None:
+        self.view = View()
         self.background = Background()
 
         # create sprite groups
@@ -394,6 +395,8 @@ class Level:
 
     # function to reset level
     def reset_level(self):
+        self.view = View()
+
         self.platform_group.empty()
         self.enemy_group.empty()
         self.bullet_group.empty()
@@ -439,6 +442,23 @@ class Level:
                     elif tile == 20:  # create exit
                         self.exit_group.add(Tile(img, img_rect))
 
+    def update(self):
+        self.player.update(self.view)
+
+        for enemy in self.enemy_group:
+            enemy.update(self.view, self.background, self.platform_group, self.water_group, self.player,
+                         self.bullet_group)
+
+        # recalculate positions
+        self.bullet_group.update(self.view, self.platform_group, self.player, self.enemy_group, self.bullet_group)
+        self.grenade_group.update(self.view, self.platform_group, self.player, self.enemy_group, self.explosion_group)
+        self.explosion_group.update(self.view)
+        self.item_box_group.update(self.view, self.player)
+        self.platform_group.update(self.view)
+        self.decoration_group.update(self.view)
+        self.water_group.update(self.view)
+        self.exit_group.update(self.view)
+
 
 class HealthBar():
     def __init__(self, x, y, max_health):
@@ -480,7 +500,7 @@ class Bullet(ScrollSprite):
         self.rect.center = (x, y)
         self.direction = direction
 
-    def update(self,view: View, platform_group: Group, player: Player, enemy_group: Group, bullet_group: Group):
+    def update(self, view: View, platform_group: Group, player: Player, enemy_group: Group, bullet_group: Group):
         super().update(view)
         # move bullet
         self.rect.x += (self.direction * self.speed)
@@ -576,7 +596,7 @@ class Explosion(ScrollSprite):
         self.rect.center = (x, y)
         self.counter = 0
 
-    def update(self,view: View):
+    def update(self, view: View):
         super().update(view)
 
         EXPLOSION_SPEED = 4
@@ -678,7 +698,6 @@ start_intro = False
 
 level = Level()
 level.load_level(level_nr)
-view = View()
 
 clock = pygame.time.Clock()
 
@@ -727,20 +746,7 @@ while run:
         if exit_button.draw(screen):
             run = False
     else:
-        level.player.update(view)
-
-        for enemy in level.enemy_group:
-            enemy.update(view, level.background, level.platform_group, level.water_group, level.player, level.bullet_group)
-
-        # recalculate positions
-        level.bullet_group.update(view, level.platform_group, level.player, level.enemy_group, level.bullet_group)
-        level.grenade_group.update(view, level.platform_group, level.player, level.enemy_group, level.explosion_group)
-        level.explosion_group.update(view)
-        level.item_box_group.update(view,level.player)
-        level.platform_group.update(view)
-        level.decoration_group.update(view)
-        level.water_group.update(view)
-        level.exit_group.update(view)
+        level.update()
 
         # draw screen
         level.background.draw(screen)
@@ -769,10 +775,10 @@ while run:
 
         # update player actions
         if level.player.alive:
-            view.screen_scroll, level_complete = level.player.update_alive(level.background, level.platform_group,
-                                                                      level.water_group, level.bullet_group,
-                                                                      level.grenade_group, level.exit_group)
-            level.background.bg_scroll -= view.screen_scroll
+            level.view.screen_scroll, level_complete = level.player.update_alive(level.background, level.platform_group,
+                                                                                 level.water_group, level.bullet_group,
+                                                                                 level.grenade_group, level.exit_group)
+            level.background.bg_scroll -= level.view.screen_scroll
             # check if player has completed the level
             if level_complete:
                 start_intro = True
@@ -782,7 +788,6 @@ while run:
 
                 level.load_level(level_nr)
         else:
-            view.screen_scroll = 0
             if death_fade.draw(screen):
                 if restart_button.draw(screen):
                     death_fade.fade_counter = 0
