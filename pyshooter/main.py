@@ -213,41 +213,6 @@ class Soldier(ScrollSprite):
             self.ammo -= 1
             resources.sfx_play('shot.wav', 0.5)
 
-    def ai(self):
-        if self.alive and player.alive:
-            if self.idling == False and random.randint(1, 200) == 1:
-                self.update_action(ActionType.IDLE)
-                self.idling = True
-                self.idling_counter = 50
-            # check if the AI in near the player
-            if self.vision.colliderect(player.rect):
-                # stop running and face the player
-                self.update_action(ActionType.IDLE)
-                # shoot
-                self.shoot()
-            else:
-                if self.idling == False:
-                    if self.direction == 1:
-                        ai_moving_right = True
-                    else:
-                        ai_moving_right = False
-                    ai_moving_left = not ai_moving_right
-                    self.move(ai_moving_left, ai_moving_right)
-                    self.update_action(ActionType.RUN)
-                    self.move_counter += 1
-                    # update AI vision as the enemy moves
-                    self.vision.center = (self.rect.centerx + 75 * self.direction, self.rect.centery)
-
-                    if self.move_counter > TILE_SIZE:
-                        self.direction *= -1
-                        self.move_counter *= -1
-                else:
-                    self.idling_counter -= 1
-                    if self.idling_counter <= 0:
-                        self.idling = False
-
-        # scroll
-        self.rect.x += screen_scroll
 
     def update_animation(self):
         # update animation
@@ -283,10 +248,6 @@ class Soldier(ScrollSprite):
     def draw(self, screen: Surface):
         screen.blit(pygame.transform.flip(self.image, self.flip, False), self.rect)
 
-
-class Enemy(Soldier):
-    def __init__(self, x, y, scale, speed, ammo, grenades):
-        super().__init__('enemy', x, y, scale, speed, ammo, grenades)
 
 
 class Player(Soldier):
@@ -336,6 +297,50 @@ class Player(Soldier):
         else:
             self.update_action(ActionType.IDLE)
         return self.move(self.moving_left, self.moving_right)
+
+class Enemy(Soldier):
+    def __init__(self, x, y, scale, speed, ammo, grenades):
+        super().__init__('enemy', x, y, scale, speed, ammo, grenades)
+
+    def update(self, player: Player):
+        self.ai(player)
+        super().update()
+
+    def ai(self, player: Player):
+        if self.alive and player.alive:
+            if self.idling == False and random.randint(1, 200) == 1:
+                self.update_action(ActionType.IDLE)
+                self.idling = True
+                self.idling_counter = 50
+            # check if the AI in near the player
+            if self.vision.colliderect(player.rect):
+                # stop running and face the player
+                self.update_action(ActionType.IDLE)
+                # shoot
+                self.shoot()
+            else:
+                if self.idling == False:
+                    if self.direction == 1:
+                        ai_moving_right = True
+                    else:
+                        ai_moving_right = False
+                    ai_moving_left = not ai_moving_right
+                    self.move(ai_moving_left, ai_moving_right)
+                    self.update_action(ActionType.RUN)
+                    self.move_counter += 1
+                    # update AI vision as the enemy moves
+                    self.vision.center = (self.rect.centerx + 75 * self.direction, self.rect.centery)
+
+                    if self.move_counter > TILE_SIZE:
+                        self.direction *= -1
+                        self.move_counter *= -1
+                else:
+                    self.idling_counter -= 1
+                    if self.idling_counter <= 0:
+                        self.idling = False
+
+        # scroll
+        self.rect.x += screen_scroll
 
 
 class CollectBox(ScrollSprite):
@@ -692,8 +697,9 @@ while run:
         player.draw(screen)
 
         for enemy in enemy_group:
-            enemy.ai()
-            enemy.update()
+            enemy.update(player)
+
+        for enemy in enemy_group:
             enemy.draw(screen)
 
         # recalculate positions
@@ -742,6 +748,7 @@ while run:
                     reset_level()
 
                     player, health_bar = load_level(level)
+
 
     for event in pygame.event.get():
         # quit game
