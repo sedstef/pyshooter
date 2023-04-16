@@ -491,7 +491,7 @@ class Grenade(ScrollSprite):
         self.height = self.image.get_height()
         self.direction = direction
 
-    def update(self):
+    def update(self, platform_group: Group, player: Player, enemy_group: Group,explosion_group:  Group):
         super().update()
         self.vel_y += GRAVITY
         dx = self.direction * self.speed
@@ -698,7 +698,7 @@ while run:
 
         # recalculate positions
         bullet_group.update(platform_group, player, enemy_group)
-        grenade_group.update()
+        grenade_group.update(platform_group, player, enemy_group, explosion_group)
         explosion_group.update()
         item_box_group.update(player)
         decoration_group.update()
