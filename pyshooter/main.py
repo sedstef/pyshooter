@@ -476,17 +476,16 @@ class HealthBar():
         pygame.draw.rect(screen, GREEN, (self.x, self.y, 150 * ratio, 20))
 
         # show ammo
-        self.draw_text(screen, 'AMMO: ', self.font, WHITE, 10, 35)
+        self.draw_text(screen, 'AMMO: ', WHITE, 10, 35)
         for x in range(player.ammo):
             screen.blit(resources.gfx_alpha('icons/bullet.png'), (90 + (x * 10), 40))
         # show grenades
-        self.draw_text(screen, 'GRENADES: ', self.font, WHITE, 10, 60)
+        self.draw_text(screen, 'GRENADES: ',  WHITE, 10, 60)
         for x in range(player.grenades):
             screen.blit(resources.gfx_alpha('icons/grenade.png'), (135 + (x * 15), 60))
 
-    @staticmethod
-    def draw_text(screen: Surface, text, font, text_col, x, y):
-        img = font.render(text, True, text_col)
+    def draw_text(self, screen: Surface, text,  text_col, x, y):
+        img = self.font.render(text, True, text_col)
         screen.blit(img, (x, y))
 
 
