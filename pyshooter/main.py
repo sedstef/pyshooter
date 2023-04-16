@@ -311,7 +311,12 @@ class Player(Soldier):
     def __init__(self, x, y, scale, speed, ammo, grenades):
         super().__init__('player', x, y, scale, speed, ammo, grenades)
 
+        # define player action variables
+        self.moving_left = False
+        self.moving_right = False
         self.shooting = False
+        self.grenade = False
+        self.grenade_thrown = False
 
     def add_health(self):
         self.health += 25
@@ -329,9 +334,26 @@ class Player(Soldier):
         resources.sfx_play('jump.wav', 0.25)
 
     def update_alive(self):
+        # shoot bullets
         if self.shooting:
-            # shoot bullets
             self.shoot()
+
+        # throw grenades
+        if self.grenade and self.grenade_thrown == False and self.grenades > 0:
+            grenade_sprite = Grenade.create(self.rect.centerx + (0.5 * self.rect.size[0] * self.direction), \
+                                     self.rect.top, self.direction)
+            grenade_group.add(grenade_sprite)
+            # reduce grenades
+            self.grenades -= 1
+            self.grenade_thrown = True
+        if self.in_air:
+            self.update_action(ActionType.JUMP)
+        elif self.moving_left or self.moving_right:
+            self.update_action(ActionType.RUN)
+        else:
+            self.update_action(ActionType.IDLE)
+        return self.move(self.moving_left, self.moving_right)
+
 
 # function to reset level
 def reset_level():
@@ -629,12 +651,6 @@ level_length = 0
 start_game = False
 start_intro = False
 
-# define player action variables
-moving_left = False
-moving_right = False
-grenade = False
-grenade_thrown = False
-
 # create sprite groups
 platform_group = pygame.sprite.Group()
 enemy_group = pygame.sprite.Group()
@@ -706,23 +722,7 @@ while run:
 
         # update player actions
         if player.alive:
-            player.update_alive()
-
-            # throw grenades
-            if grenade and grenade_thrown == False and player.grenades > 0:
-                grenade = Grenade.create(player.rect.centerx + (0.5 * player.rect.size[0] * player.direction), \
-                                         player.rect.top, player.direction)
-                grenade_group.add(grenade)
-                # reduce grenades
-                player.grenades -= 1
-                grenade_thrown = True
-            if player.in_air:
-                player.update_action(ActionType.JUMP)
-            elif moving_left or moving_right:
-                player.update_action(ActionType.RUN)
-            else:
-                player.update_action(ActionType.IDLE)
-            screen_scroll, level_complete = player.move(moving_left, moving_right)
+            screen_scroll, level_complete = player.update_alive()
             bg_scroll -= screen_scroll
             # check if player has completed the level
             if level_complete:
@@ -750,13 +750,13 @@ while run:
         # keyboard presses
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_a:
-                moving_left = True
+                player.moving_left = True
             if event.key == pygame.K_d:
-                moving_right = True
+                player.moving_right = True
             if event.key == pygame.K_SPACE:
                 player.shooting = True
             if event.key == pygame.K_q:
-                grenade = True
+                player.grenade = True
             if event.key == pygame.K_w and player.alive:
                 player.jump()
             if event.key == pygame.K_ESCAPE:
@@ -765,14 +765,14 @@ while run:
         # keyboard button released
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_a:
-                moving_left = False
+                player.moving_left = False
             if event.key == pygame.K_d:
-                moving_right = False
+                player.moving_right = False
             if event.key == pygame.K_SPACE:
                 player.shooting = False
             if event.key == pygame.K_q:
-                grenade = False
-                grenade_thrown = False
+                player.grenade = False
+                player.grenade_thrown = False
 
     pygame.display.update()
 
