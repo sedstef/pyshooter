@@ -174,11 +174,6 @@ class Soldier(ScrollSprite):
         if pygame.sprite.spritecollide(self, water_group, False):
             self.health = 0
 
-        # check for collision with exit
-        level_complete = False
-        if pygame.sprite.spritecollide(self, exit_group, False):
-            level_complete = True
-
         # check if fallen off the map
         if self.rect.bottom > SCREEN_HEIGHT:
             self.health = 0
@@ -200,7 +195,7 @@ class Soldier(ScrollSprite):
                 self.rect.x -= dx
                 screen_scroll = -dx
 
-        return screen_scroll, level_complete
+        return screen_scroll
 
     def shoot(self, bullet_group: Group):
         if self.shoot_cooldown == 0 and self.ammo > 0:
@@ -260,6 +255,8 @@ class Player(Soldier):
         self.grenade = False
         self.grenade_thrown = False
 
+        self._level_complete = False
+
     def add_health(self):
         self.health += 25
         if self.health > self.max_health:
@@ -275,7 +272,7 @@ class Player(Soldier):
         self._jumping = True
         resources.sfx_play('jump.wav', 0.25)
 
-    def update_alive(self, bullet_group: Group, grenade_group: Group):
+    def update_alive(self, bullet_group: Group, grenade_group: Group, exit_group: Group):
         # shoot bullets
         if self.shooting:
             self.shoot(bullet_group)
@@ -294,7 +291,15 @@ class Player(Soldier):
             self.update_action(ActionType.RUN)
         else:
             self.update_action(ActionType.IDLE)
-        return self.move(self.moving_left, self.moving_right)
+
+
+        return self.move(self.moving_left, self.moving_right), self.level_complete(exit_group)
+
+    def level_complete(self, exit_group: Group):
+        # check for collision with exit
+        if pygame.sprite.spritecollide(self, exit_group, False):
+            self._level_complete = True
+        return self._level_complete
 
 
 class Enemy(Soldier):
@@ -756,7 +761,7 @@ while run:
 
         # update player actions
         if player.alive:
-            screen_scroll, level_complete = player.update_alive(bullet_group, grenade_group)
+            screen_scroll, level_complete = player.update_alive(bullet_group, grenade_group, exit_group)
             bg_scroll -= screen_scroll
             # check if player has completed the level
             if level_complete:
