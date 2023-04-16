@@ -3,7 +3,7 @@ from enum import StrEnum
 
 import pygame
 from pygame import mixer, Surface, Rect
-from pygame.sprite import Sprite
+from pygame.sprite import Sprite, Group
 
 from pyshooter import resources
 
@@ -452,7 +452,7 @@ class Bullet(ScrollSprite):
         self.rect.center = (x, y)
         self.direction = direction
 
-    def update(self):
+    def update(self, platform_group: Group, player: Player, enemy_group: Group):
         super().update()
         # move bullet
         self.rect.x += (self.direction * self.speed)
@@ -697,10 +697,10 @@ while run:
             enemy.draw(screen)
 
         # recalculate positions
-        bullet_group.update()
+        bullet_group.update(platform_group, player, enemy_group)
         grenade_group.update()
         explosion_group.update()
-        item_box_group.update()
+        item_box_group.update(player)
         decoration_group.update()
         water_group.update()
         exit_group.update()
