@@ -33,6 +33,9 @@ PINK = (235, 65, 54)
 
 class Background:
 
+    def __init__(self) -> None:
+        self.bg_scroll = 0
+
     def draw(self, screen: Surface):
         sky = resources.gfx_alpha('background/sky_cloud.png')
         mountain = resources.gfx_alpha('background/mountain.png')
@@ -42,12 +45,12 @@ class Background:
         width = sky.get_width()
         screen.fill(BG)
         for x in range(5):
-            screen.blit(sky, ((x * width) - bg_scroll * 0.5, 0))
+            screen.blit(sky, ((x * width) - self.bg_scroll * 0.5, 0))
             screen.blit(mountain,
-                        ((x * width) - bg_scroll * 0.6, SCREEN_HEIGHT - mountain.get_height() - 300))
+                        ((x * width) - self.bg_scroll * 0.6, SCREEN_HEIGHT - mountain.get_height() - 300))
             screen.blit(pine1,
-                        ((x * width) - bg_scroll * 0.7, SCREEN_HEIGHT - pine1.get_height() - 150))
-            screen.blit(pine2, ((x * width) - bg_scroll * 0.8, SCREEN_HEIGHT - pine2.get_height()))
+                        ((x * width) - self.bg_scroll * 0.7, SCREEN_HEIGHT - pine1.get_height() - 150))
+            screen.blit(pine2, ((x * width) - self.bg_scroll * 0.8, SCREEN_HEIGHT - pine2.get_height()))
 
 
 class ScrollSprite(Sprite):
@@ -121,7 +124,7 @@ class Soldier(ScrollSprite):
         if self.shoot_cooldown > 0:
             self.shoot_cooldown -= 1
 
-    def move(self, moving_left, moving_right, platform_group: Group, water_group: Group):
+    def move(self, moving_left, moving_right, background: Background, platform_group: Group, water_group: Group):
         # reset movement variables
         screen_scroll = 0
         dx = 0
@@ -189,9 +192,9 @@ class Soldier(ScrollSprite):
 
         # update scroll based on player position
         if self.char_type == 'player':
-            if (self.rect.right > SCREEN_WIDTH - SCROLL_THRESH and bg_scroll < (
+            if (self.rect.right > SCREEN_WIDTH - SCROLL_THRESH and background.bg_scroll < (
                     level_length * TILE_SIZE) - SCREEN_WIDTH) \
-                    or (self.rect.left < SCROLL_THRESH and bg_scroll > abs(dx)):
+                    or (self.rect.left < SCROLL_THRESH and background.bg_scroll > abs(dx)):
                 self.rect.x -= dx
                 screen_scroll = -dx
 
@@ -272,7 +275,8 @@ class Player(Soldier):
         self._jumping = True
         resources.sfx_play('jump.wav', 0.25)
 
-    def update_alive(self, platform_group: Group,water_group: Group, bullet_group: Group, grenade_group: Group, exit_group: Group):
+    def update_alive(self, background: Background, platform_group: Group, water_group: Group, bullet_group: Group,
+                     grenade_group: Group, exit_group: Group):
         # shoot bullets
         if self.shooting:
             self.shoot(bullet_group)
@@ -292,7 +296,8 @@ class Player(Soldier):
         else:
             self.update_action(ActionType.IDLE)
 
-        return self.move(self.moving_left, self.moving_right, platform_group,water_group), self.level_complete(exit_group)
+        return self.move(self.moving_left, self.moving_right, background, platform_group,
+                         water_group), self.level_complete(exit_group)
 
     def level_complete(self, exit_group: Group):
         # check for collision with exit
@@ -305,11 +310,13 @@ class Enemy(Soldier):
     def __init__(self, x, y, scale, speed, ammo, grenades):
         super().__init__('enemy', x, y, scale, speed, ammo, grenades)
 
-    def update(self, platform_group: Group, water_group: Group, player: Player, bullet_group: Group):
-        self.ai(platform_group,water_group, player, bullet_group)
+    def update(self, background: Background, platform_group: Group, water_group: Group, player: Player,
+               bullet_group: Group):
+        self.ai(background, platform_group, water_group, player, bullet_group)
         super().update()
 
-    def ai(self, platform_group: Group, water_group: Group, player: Player, bullet_group: Group):
+    def ai(self, background: Background, platform_group: Group, water_group: Group, player: Player,
+           bullet_group: Group):
         if self.alive and player.alive:
             if self.idling == False and random.randint(1, 200) == 1:
                 self.update_action(ActionType.IDLE)
@@ -328,7 +335,7 @@ class Enemy(Soldier):
                     else:
                         ai_moving_right = False
                     ai_moving_left = not ai_moving_right
-                    self.move(ai_moving_left, ai_moving_right, platform_group, water_group)
+                    self.move(ai_moving_left, ai_moving_right, background, platform_group, water_group)
                     self.update_action(ActionType.RUN)
                     self.move_counter += 1
                     # update AI vision as the enemy moves
@@ -362,9 +369,12 @@ class CollectBox(ScrollSprite):
             # delete the item box
             self.kill()
 
+
 class Level:
 
     def __init__(self) -> None:
+        self.background = Background()
+
         # create sprite groups
         self.platform_group = pygame.sprite.Group()
         self.enemy_group = pygame.sprite.Group()
@@ -387,7 +397,6 @@ class Level:
         self.decoration_group.empty()
         self.water_group.empty()
         self.exit_group.empty()
-
 
     def load_level(self, level: int):
         # create empty tile list
@@ -655,10 +664,8 @@ exit_button = Button.create('buttons/exit.png', 110, 50, 1)
 restart_button = Button.create('buttons/restart.png', 100, - 50, 2)
 
 resources.music_play('music2.mp3', 0.3, -1, 0.0, 5000)
-background = Background()
 
 screen_scroll = 0
-bg_scroll = 0
 level_nr = 1
 level_length = 0
 start_game = False
@@ -717,7 +724,7 @@ while run:
         level.player.update()
 
         for enemy in level.enemy_group:
-            enemy.update(level.platform_group, level.water_group, level.player, level.bullet_group)
+            enemy.update(level.background, level.platform_group, level.water_group, level.player, level.bullet_group)
 
         # recalculate positions
         level.bullet_group.update(level.platform_group, level.player, level.enemy_group, level.bullet_group)
@@ -730,7 +737,7 @@ while run:
         level.exit_group.update()
 
         # draw screen
-        background.draw(screen)
+        level.background.draw(screen)
         level.platform_group.draw(screen)
         level.item_box_group.draw(screen)
         level.decoration_group.draw(screen)
@@ -756,13 +763,15 @@ while run:
 
         # update player actions
         if level.player.alive:
-            screen_scroll, level_complete = level.player.update_alive(level.platform_group, level.water_group, level.bullet_group, level. grenade_group, level. exit_group)
-            bg_scroll -= screen_scroll
+            screen_scroll, level_complete = level.player.update_alive(level.background, level.platform_group,
+                                                                      level.water_group, level.bullet_group,
+                                                                      level.grenade_group, level.exit_group)
+            level.background.bg_scroll -= screen_scroll
             # check if player has completed the level
             if level_complete:
                 start_intro = True
                 level_nr += 1
-                bg_scroll = 0
+                level.background.bg_scroll = 0
                 level.reset_level()
 
                 level.load_level(level_nr)
@@ -772,8 +781,8 @@ while run:
                 if restart_button.draw(screen):
                     death_fade.fade_counter = 0
                     start_intro = True
-                    bg_scroll = 0
-                    level. reset_level()
+                    level.background.bg_scroll = 0
+                    level.reset_level()
 
                     level.load_level(level_nr)
 
