@@ -311,6 +311,8 @@ class Player(Soldier):
     def __init__(self, x, y, scale, speed, ammo, grenades):
         super().__init__('player', x, y, scale, speed, ammo, grenades)
 
+        self.shooting = False
+
     def add_health(self):
         self.health += 25
         if self.health > self.max_health:
@@ -326,6 +328,10 @@ class Player(Soldier):
         self._jumping = True
         resources.sfx_play('jump.wav', 0.25)
 
+    def update_alive(self):
+        if self.shooting:
+            # shoot bullets
+            self.shoot()
 
 # function to reset level
 def reset_level():
@@ -626,7 +632,6 @@ start_intro = False
 # define player action variables
 moving_left = False
 moving_right = False
-shoot = False
 grenade = False
 grenade_thrown = False
 
@@ -701,11 +706,10 @@ while run:
 
         # update player actions
         if player.alive:
-            # shoot bullets
-            if shoot:
-                player.shoot()
+            player.update_alive()
+
             # throw grenades
-            elif grenade and grenade_thrown == False and player.grenades > 0:
+            if grenade and grenade_thrown == False and player.grenades > 0:
                 grenade = Grenade.create(player.rect.centerx + (0.5 * player.rect.size[0] * player.direction), \
                                          player.rect.top, player.direction)
                 grenade_group.add(grenade)
@@ -750,7 +754,7 @@ while run:
             if event.key == pygame.K_d:
                 moving_right = True
             if event.key == pygame.K_SPACE:
-                shoot = True
+                player.shooting = True
             if event.key == pygame.K_q:
                 grenade = True
             if event.key == pygame.K_w and player.alive:
@@ -765,7 +769,7 @@ while run:
             if event.key == pygame.K_d:
                 moving_right = False
             if event.key == pygame.K_SPACE:
-                shoot = False
+                player.shooting = False
             if event.key == pygame.K_q:
                 grenade = False
                 grenade_thrown = False
