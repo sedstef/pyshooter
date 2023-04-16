@@ -202,7 +202,7 @@ class Soldier(ScrollSprite):
 
         return screen_scroll, level_complete
 
-    def shoot(self):
+    def shoot(self,bullet_group: Group):
         if self.shoot_cooldown == 0 and self.ammo > 0:
             self.shoot_cooldown = 20
             bullet = Bullet.create(self.rect.centerx + (0.75 * self.rect.size[0] * self.direction),
@@ -277,10 +277,10 @@ class Player(Soldier):
         self._jumping = True
         resources.sfx_play('jump.wav', 0.25)
 
-    def update_alive(self):
+    def update_alive(self,bullet_group: Group, grenade_group: Group):
         # shoot bullets
         if self.shooting:
-            self.shoot()
+            self.shoot(bullet_group)
 
         # throw grenades
         if self.grenade and self.grenade_thrown == False and self.grenades > 0:
@@ -302,11 +302,11 @@ class Enemy(Soldier):
     def __init__(self, x, y, scale, speed, ammo, grenades):
         super().__init__('enemy', x, y, scale, speed, ammo, grenades)
 
-    def update(self, player: Player):
-        self.ai(player)
+    def update(self, player: Player,bullet_group: Group):
+        self.ai(player,bullet_group)
         super().update()
 
-    def ai(self, player: Player):
+    def ai(self, player: Player, bullet_group: Group):
         if self.alive and player.alive:
             if self.idling == False and random.randint(1, 200) == 1:
                 self.update_action(ActionType.IDLE)
@@ -317,7 +317,7 @@ class Enemy(Soldier):
                 # stop running and face the player
                 self.update_action(ActionType.IDLE)
                 # shoot
-                self.shoot()
+                self.shoot(bullet_group)
             else:
                 if self.idling == False:
                     if self.direction == 1:
@@ -697,7 +697,7 @@ while run:
         player.draw(screen)
 
         for enemy in enemy_group:
-            enemy.update(player)
+            enemy.update(player, bullet_group)
 
         for enemy in enemy_group:
             enemy.draw(screen)
@@ -728,7 +728,7 @@ while run:
 
         # update player actions
         if player.alive:
-            screen_scroll, level_complete = player.update_alive()
+            screen_scroll, level_complete = player.update_alive(bullet_group, grenade_group)
             bg_scroll -= screen_scroll
             # check if player has completed the level
             if level_complete:
