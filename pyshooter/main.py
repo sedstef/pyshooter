@@ -66,23 +66,6 @@ class Tile(ScrollSprite):
         super().__init__(image, rect)
 
 
-class CollectBox(ScrollSprite):
-    def __init__(self, image: Surface, rect: Rect, collector):
-        super().__init__(image, rect)
-        self._collector = collector
-
-    def update(self):
-        super().update()
-
-        # check if the player has picked up the box
-        if pygame.sprite.collide_rect(self, player):
-            # collect the item
-            self._collector(player)
-
-            # delete the item box
-            self.kill()
-
-
 class ActionType(StrEnum):
     IDLE = 'idle'
     RUN = 'run'
@@ -341,7 +324,7 @@ class Player(Soldier):
         # throw grenades
         if self.grenade and self.grenade_thrown == False and self.grenades > 0:
             grenade_sprite = Grenade.create(self.rect.centerx + (0.5 * self.rect.size[0] * self.direction), \
-                                     self.rect.top, self.direction)
+                                            self.rect.top, self.direction)
             grenade_group.add(grenade_sprite)
             # reduce grenades
             self.grenades -= 1
@@ -353,6 +336,23 @@ class Player(Soldier):
         else:
             self.update_action(ActionType.IDLE)
         return self.move(self.moving_left, self.moving_right)
+
+
+class CollectBox(ScrollSprite):
+    def __init__(self, image: Surface, rect: Rect, collector):
+        super().__init__(image, rect)
+        self._collector = collector
+
+    def update(self, player: Player):
+        super().update()
+
+        # check if the player has picked up the box
+        if pygame.sprite.collide_rect(self, player):
+            # collect the item
+            self._collector(player)
+
+            # delete the item box
+            self.kill()
 
 
 # function to reset level
