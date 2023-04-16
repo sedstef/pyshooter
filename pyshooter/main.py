@@ -130,7 +130,7 @@ class Soldier(ScrollSprite):
         if self.shoot_cooldown > 0:
             self.shoot_cooldown -= 1
 
-    def move(self, moving_left, moving_right, background: Background, platform_group: Group, water_group: Group):
+    def move(self, view:View, moving_left, moving_right, background: Background, platform_group: Group, water_group: Group):
         # reset movement variables
         screen_scroll = 0
         dx = 0
@@ -199,7 +199,7 @@ class Soldier(ScrollSprite):
         # update scroll based on player position
         if self.char_type == 'player':
             if (self.rect.right > SCREEN_WIDTH - SCROLL_THRESH and background.bg_scroll < (
-                    level_length * TILE_SIZE) - SCREEN_WIDTH) \
+                    view.level_length * TILE_SIZE) - SCREEN_WIDTH) \
                     or (self.rect.left < SCROLL_THRESH and background.bg_scroll > abs(dx)):
                 self.rect.x -= dx
                 screen_scroll = -dx
@@ -281,7 +281,7 @@ class Player(Soldier):
         self._jumping = True
         resources.sfx_play('jump.wav', 0.25)
 
-    def update_alive(self, background: Background, platform_group: Group, water_group: Group, bullet_group: Group,
+    def update_alive(self,view:View, background: Background, platform_group: Group, water_group: Group, bullet_group: Group,
                      grenade_group: Group, exit_group: Group):
         # shoot bullets
         if self.shooting:
@@ -302,7 +302,7 @@ class Player(Soldier):
         else:
             self.update_action(ActionType.IDLE)
 
-        return self.move(self.moving_left, self.moving_right, background, platform_group,
+        return self.move(view,self.moving_left, self.moving_right, background, platform_group,
                          water_group), self.level_complete(exit_group)
 
     def level_complete(self, exit_group: Group):
@@ -341,7 +341,7 @@ class Enemy(Soldier):
                     else:
                         ai_moving_right = False
                     ai_moving_left = not ai_moving_right
-                    self.move(ai_moving_left, ai_moving_right, background, platform_group, water_group)
+                    self.move(view,ai_moving_left, ai_moving_right, background, platform_group, water_group)
                     self.update_action(ActionType.RUN)
                     self.move_counter += 1
                     # update AI vision as the enemy moves
@@ -411,8 +411,7 @@ class Level:
         # create empty tile list
         _data = resources.scene(level, ROWS, COLS)
 
-        global level_length
-        level_length = len(_data[0])
+        self.view.level_length = len(_data[0])
         # iterate through each value in level data file
         for y, row in enumerate(_data):
             for x, tile in enumerate(row):
@@ -691,7 +690,6 @@ restart_button = Button.create('buttons/restart.png', 100, - 50, 2)
 resources.music_play('music2.mp3', 0.3, -1, 0.0, 5000)
 
 level_nr = 1
-level_length = 0
 start_game = False
 start_intro = False
 
@@ -774,7 +772,7 @@ while run:
 
         # update player actions
         if level.player.alive:
-            level.view.screen_scroll, level_complete = level.player.update_alive(level.background, level.platform_group,
+            level.view.screen_scroll, level_complete = level.player.update_alive(level.view, level.background, level.platform_group,
                                                                                  level.water_group, level.bullet_group,
                                                                                  level.grenade_group, level.exit_group)
             level.background.bg_scroll -= level.view.screen_scroll
