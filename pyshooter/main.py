@@ -53,6 +53,12 @@ class Background:
             screen.blit(pine2, ((x * width) - self.bg_scroll * 0.8, SCREEN_HEIGHT - pine2.get_height()))
 
 
+class View:
+
+    def __init__(self) -> None:
+        self.screen_scroll = 0
+
+
 class ScrollSprite(Sprite):
 
     def __init__(self, image: Surface, rect: Rect):
@@ -61,7 +67,7 @@ class ScrollSprite(Sprite):
         self.rect = rect
 
     def update(self):
-        self.rect.x += screen_scroll
+        self.rect.x += view.screen_scroll
 
 
 class Tile(ScrollSprite):
@@ -350,7 +356,7 @@ class Enemy(Soldier):
                         self.idling = False
 
         # scroll
-        self.rect.x += screen_scroll
+        self.rect.x += view.screen_scroll
 
 
 class CollectBox(ScrollSprite):
@@ -665,7 +671,6 @@ restart_button = Button.create('buttons/restart.png', 100, - 50, 2)
 
 resources.music_play('music2.mp3', 0.3, -1, 0.0, 5000)
 
-screen_scroll = 0
 level_nr = 1
 level_length = 0
 start_game = False
@@ -673,6 +678,7 @@ start_intro = False
 
 level = Level()
 level.load_level(level_nr)
+view = View()
 
 clock = pygame.time.Clock()
 
@@ -763,10 +769,10 @@ while run:
 
         # update player actions
         if level.player.alive:
-            screen_scroll, level_complete = level.player.update_alive(level.background, level.platform_group,
+            view.screen_scroll, level_complete = level.player.update_alive(level.background, level.platform_group,
                                                                       level.water_group, level.bullet_group,
                                                                       level.grenade_group, level.exit_group)
-            level.background.bg_scroll -= screen_scroll
+            level.background.bg_scroll -= view.screen_scroll
             # check if player has completed the level
             if level_complete:
                 start_intro = True
@@ -776,7 +782,7 @@ while run:
 
                 level.load_level(level_nr)
         else:
-            screen_scroll = 0
+            view.screen_scroll = 0
             if death_fade.draw(screen):
                 if restart_button.draw(screen):
                     death_fade.fade_counter = 0
