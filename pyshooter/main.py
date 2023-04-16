@@ -466,6 +466,8 @@ class HealthBar():
         self.y = y
         self.max_health = max_health
 
+        self.font = pygame.font.SysFont('Futura', 30)
+
     def draw(self, screen: Surface, player: Player):
         # calculate health ratio
         ratio = player.health / self.max_health
@@ -474,11 +476,11 @@ class HealthBar():
         pygame.draw.rect(screen, GREEN, (self.x, self.y, 150 * ratio, 20))
 
         # show ammo
-        self.draw_text(screen, 'AMMO: ', font, WHITE, 10, 35)
+        self.draw_text(screen, 'AMMO: ', self.font, WHITE, 10, 35)
         for x in range(player.ammo):
             screen.blit(resources.gfx_alpha('icons/bullet.png'), (90 + (x * 10), 40))
         # show grenades
-        self.draw_text(screen, 'GRENADES: ', font, WHITE, 10, 60)
+        self.draw_text(screen, 'GRENADES: ', self.font, WHITE, 10, 60)
         for x in range(player.grenades):
             screen.blit(resources.gfx_alpha('icons/grenade.png'), (135 + (x * 15), 60))
 
@@ -682,8 +684,6 @@ pygame.display.set_caption('Shooter')
 intro_fade = ScreenFade(1, BLACK, 4)
 death_fade = ScreenFade(2, PINK, 4)
 
-# define font
-font = pygame.font.SysFont('Futura', 30)
 
 start_button = Button.create('buttons/start.png', 130, -150, 1)
 exit_button = Button.create('buttons/exit.png', 110, 50, 1)
