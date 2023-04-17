@@ -1,5 +1,6 @@
 import random
 from enum import StrEnum
+from typing import Type
 
 import pygame
 from pygame import mixer, Surface, Rect
@@ -688,8 +689,15 @@ class Button():
 class TitleScene:
 
     def __init__(self) -> None:
-        start_button = Button.create('buttons/start.png', 130, -150, 1)
-        exit_button = Button.create('buttons/exit.png', 110, 50, 1)
+        self.start_button = Button.create('buttons/start.png', 130, -150, 1)
+        self.exit_button = Button.create('buttons/exit.png', 110, 50, 1)
+
+class Scene:
+
+    def __init__(self) -> None:
+        self.level_nr = 1
+        self.start_game = False
+        self.start_intro = False
 
 
 def main():
@@ -708,12 +716,10 @@ def main():
 
     resources.music_play('music2.mp3', 0.3, -1, 0.0, 5000)
 
-    level_nr = 1
-    start_game = False
-    start_intro = False
+    scene = Scene()
 
     level = Level()
-    level.load_level(level_nr)
+    level.load_level(scene.level_nr)
 
     clock = pygame.time.Clock()
 
@@ -727,13 +733,13 @@ def main():
                 running = False
             keyboard.handle(event, level.player)
 
-        if start_game == False:
+        if scene.start_game == False:
             # draw menu
             screen.fill(BG)
             # add buttons
             if title_scene.start_button.draw(screen):
-                start_game = True
-                start_intro = True
+                scene.start_game = True
+                scene.start_intro = True
             if title_scene.exit_button.draw(screen):
                 running = False
         else:
@@ -759,9 +765,9 @@ def main():
             level.health_bar.draw(screen, level.player)
 
             # show intro
-            if start_intro == True:
+            if scene.start_intro == True:
                 if intro_fade.draw(screen):
-                    start_intro = False
+                    scene.start_intro = False
                     intro_fade.fade_counter = 0
 
             # update player actions
@@ -769,21 +775,21 @@ def main():
                 level.update_player()
                 # check if player has completed the level
                 if level.is_complete():
-                    start_intro = True
-                    level_nr += 1
+                    scene.start_intro = True
+                    scene.level_nr += 1
                     level.background.bg_scroll = 0
                     level.reset_level()
 
-                    level.load_level(level_nr)
+                    level.load_level(scene.level_nr)
             else:
                 if death_fade.draw(screen):
                     if restart_button.draw(screen):
                         death_fade.fade_counter = 0
-                        start_intro = True
+                        scene.start_intro = True
                         level.background.bg_scroll = 0
                         level.reset_level()
 
-                        level.load_level(level_nr)
+                        level.load_level(scene.level_nr)
 
         pygame.display.update()
 
