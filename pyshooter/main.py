@@ -699,6 +699,18 @@ class Scene:
         self.start_game = False
         self.start_intro = False
 
+class SceneIterator:
+    def __iter__(self):
+        self.scene = Scene()
+        self.scene.running = True
+
+        return self
+
+    def __next__(self):
+        if self.scene.running is True:
+          return self.scene
+        else:
+          raise StopIteration
 
 def main():
     mixer.init()
@@ -716,21 +728,20 @@ def main():
 
     resources.music_play('music2.mp3', 0.3, -1, 0.0, 5000)
 
-    scene = Scene()
-
-    level = Level()
-    level.load_level(scene.level_nr)
+    level = None
 
     clock = pygame.time.Clock()
-
-    running = True
-    while running:
+    for scene in iter(SceneIterator()):
         clock.tick(FPS)
+
+        if level is None:
+            level = Level()
+            level.load_level(scene.level_nr)
 
         for event in pygame.event.get():
             if (event.type == KEYDOWN and event.key == K_ESCAPE) or event.type == QUIT:
                 # quit game
-                running = False
+                scene.running = False
             keyboard.handle(event, level.player)
 
         if scene.start_game == False:
@@ -741,7 +752,7 @@ def main():
                 scene.start_game = True
                 scene.start_intro = True
             if title_scene.exit_button.draw(screen):
-                running = False
+                scene.running = False
         else:
             level.update()
 
