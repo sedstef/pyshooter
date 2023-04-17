@@ -685,6 +685,12 @@ class Button():
 
         return action
 
+class TitleScene:
+
+    def __init__(self) -> None:
+        start_button = Button.create('buttons/start.png', 130, -150, 1)
+        exit_button = Button.create('buttons/exit.png', 110, 50, 1)
+
 
 def main():
     mixer.init()
@@ -696,8 +702,8 @@ def main():
     intro_fade = ScreenFade(1, BLACK, 4)
     death_fade = ScreenFade(2, PINK, 4)
 
-    start_button = Button.create('buttons/start.png', 130, -150, 1)
-    exit_button = Button.create('buttons/exit.png', 110, 50, 1)
+    title_scene = TitleScene()
+
     restart_button = Button.create('buttons/restart.png', 100, - 50, 2)
 
     resources.music_play('music2.mp3', 0.3, -1, 0.0, 5000)
@@ -725,10 +731,10 @@ def main():
             # draw menu
             screen.fill(BG)
             # add buttons
-            if start_button.draw(screen):
+            if title_scene.start_button.draw(screen):
                 start_game = True
                 start_intro = True
-            if exit_button.draw(screen):
+            if title_scene.exit_button.draw(screen):
                 running = False
         else:
             level.update()
