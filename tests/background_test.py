@@ -2,8 +2,7 @@ import unittest
 
 import pygame
 
-from pyshooter import resources
-from pyshooter.main import Player, Background
+from pyshooter.main import Background
 
 
 class BackgroundTest(unittest.TestCase):
@@ -19,7 +18,7 @@ class BackgroundTest(unittest.TestCase):
     def tearDownClass(cls):
         pygame.quit()
 
-    def test_move(self):
+    def test_draw(self):
         # arrange
         background = Background()
 
