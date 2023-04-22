@@ -1,6 +1,5 @@
 import random
 from enum import StrEnum
-from typing import Type
 
 import pygame
 from pygame import mixer, Surface, Rect
@@ -686,11 +685,27 @@ class Button():
 
         return action
 
+
 class TitleScene:
 
     def __init__(self) -> None:
         self.start_button = Button.create('buttons/start.png', 130, -150, 1)
         self.exit_button = Button.create('buttons/exit.png', 110, 50, 1)
+
+    def draw(self, screen: Surface):
+        # draw menu
+        screen.fill(BG)
+        # add buttons
+        start_game = False
+        start_intro = False
+        running = True
+        if self.start_button.draw(screen):
+            start_game = True
+            start_intro = True
+        if self.exit_button.draw(screen):
+            running = False
+        return (start_game, start_intro, running)
+
 
 class Scene:
 
@@ -698,6 +713,8 @@ class Scene:
         self.level_nr = 1
         self.start_game = False
         self.start_intro = False
+        self.title_scene = TitleScene()
+
 
 class SceneIterator:
     def __iter__(self):
@@ -708,9 +725,10 @@ class SceneIterator:
 
     def __next__(self):
         if self.scene.running is True:
-          return self.scene
+            return self.scene
         else:
-          raise StopIteration
+            raise StopIteration
+
 
 def main():
     mixer.init()
@@ -721,8 +739,6 @@ def main():
     # create screen fades
     intro_fade = ScreenFade(1, BLACK, 4)
     death_fade = ScreenFade(2, PINK, 4)
-
-    title_scene = TitleScene()
 
     restart_button = Button.create('buttons/restart.png', 100, - 50, 2)
 
@@ -745,14 +761,7 @@ def main():
             keyboard.handle(event, level.player)
 
         if scene.start_game == False:
-            # draw menu
-            screen.fill(BG)
-            # add buttons
-            if title_scene.start_button.draw(screen):
-                scene.start_game = True
-                scene.start_intro = True
-            if title_scene.exit_button.draw(screen):
-                scene.running = False
+            scene.start_game, scene.start_intro, scene.running = scene.title_scene.draw(screen)
         else:
             level.update()
 
