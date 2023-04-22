@@ -8,19 +8,7 @@ from pygame.sprite import Sprite, Group
 
 from pyshooter import resources, keyboard
 from pyshooter.colors import BG, RED, WHITE, GREEN, BLACK, PINK
-
-SCREEN_WIDTH = 800
-SCREEN_HEIGHT = int(SCREEN_WIDTH * 0.8)
-
-# set framerate
-FPS = 60
-
-# define game variables
-GRAVITY = 0.75
-SCROLL_THRESH = 200
-ROWS = 16
-COLS = 150
-TILE_SIZE = SCREEN_HEIGHT // ROWS
+from pyshooter.settings import SCREEN_WIDTH, SCREEN_HEIGHT, FPS, GRAVITY, SCROLL_THRESH, ROWS, COLS, TILE_SIZE
 
 
 class Background:
