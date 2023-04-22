@@ -698,7 +698,9 @@ class Scene:
         return self
 
     def handle_event(self, event):
-        pass
+        if (event.type == KEYDOWN and event.key == K_ESCAPE) or event.type == QUIT:
+            # quit game
+            self.running = False
 
     def draw(self, screen: Surface):
         pass
@@ -720,6 +722,7 @@ class LevelScene(Scene):
         self.level.load_level(self.level_nr)
 
     def handle_event(self, event):
+        super().handle_event(event)
         keyboard.handle(event, self.level.player)
 
     def draw(self, screen: Surface):
@@ -791,14 +794,11 @@ class TitleScene(Scene):
         # draw menu
         screen.fill(BG)
         # add buttons
-        start_intro = False
         if self.start_button.draw(screen):
             self.start_game = True
-            start_intro = True
+            self.start_intro = True
         if self.exit_button.draw(screen):
             self.running = False
-
-        return (self.start_game, start_intro)
 
 
 class SceneIterator:
@@ -828,15 +828,9 @@ def main():
         clock.tick(FPS)
 
         for event in pygame.event.get():
-            if (event.type == KEYDOWN and event.key == K_ESCAPE) or event.type == QUIT:
-                # quit game
-                scene.running = False
             scene.handle_event(event)
 
-        if scene.start_game == False:
-            scene.start_game, scene.start_intro = scene.draw(screen)
-        else:
-            scene.draw(screen)
+        scene.draw(screen)
         pygame.display.update()
 
     pygame.quit()
