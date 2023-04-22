@@ -686,9 +686,24 @@ class Button():
         return action
 
 
-class TitleScene:
+class Scene:
 
     def __init__(self) -> None:
+        self.level_nr = 1
+        self.start_game = False
+        self.start_intro = False
+
+    def next(self):
+        return self
+
+    def draw(self, screen: Surface):
+        pass
+
+
+class TitleScene(Scene):
+
+    def __init__(self) -> None:
+        super().__init__()
         self.start_button = Button.create('buttons/start.png', 130, -150, 1)
         self.exit_button = Button.create('buttons/exit.png', 110, 50, 1)
 
@@ -698,34 +713,25 @@ class TitleScene:
         # add buttons
         start_game = False
         start_intro = False
-        running = True
         if self.start_button.draw(screen):
             start_game = True
             start_intro = True
         if self.exit_button.draw(screen):
-            running = False
-        return (start_game, start_intro, running)
+            self.running = False
 
-
-class Scene:
-
-    def __init__(self) -> None:
-        self.level_nr = 1
-        self.start_game = False
-        self.start_intro = False
-        self.title_scene = TitleScene()
+        return (start_game, start_intro)
 
 
 class SceneIterator:
     def __iter__(self):
-        self.scene = Scene()
+        self.scene = TitleScene()
         self.scene.running = True
 
         return self
 
     def __next__(self):
         if self.scene.running is True:
-            return self.scene
+            return self.scene.next()
         else:
             raise StopIteration
 
@@ -761,7 +767,7 @@ def main():
             keyboard.handle(event, level.player)
 
         if scene.start_game == False:
-            scene.start_game, scene.start_intro, scene.running = scene.title_scene.draw(screen)
+            scene.start_game, scene.start_intro = scene.draw(screen)
         else:
             level.update()
 
