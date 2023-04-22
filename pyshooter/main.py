@@ -7,6 +7,7 @@ from pygame.locals import KEYDOWN, K_ESCAPE, QUIT
 from pygame.sprite import Sprite, Group
 
 from pyshooter import resources, keyboard
+from pyshooter.button import Button
 from pyshooter.colors import BG, RED, WHITE, GREEN, BLACK, PINK
 from pyshooter.settings import SCREEN_WIDTH, SCREEN_HEIGHT, FPS, GRAVITY, SCROLL_THRESH, ROWS, COLS, TILE_SIZE
 
@@ -624,41 +625,6 @@ class ScreenFade():
             fade_complete = True
 
         return fade_complete
-
-
-class Button():
-    @staticmethod
-    def create(name: str, width: int, height: int, scale: int):
-        img = resources.gfx_alpha(name)
-        return Button(SCREEN_WIDTH // 2 - width, SCREEN_HEIGHT // 2 + height, img, scale)
-
-    def __init__(self, x, y, image, scale):
-        self.width = image.get_width()
-        self.height = image.get_height()
-        self.image = pygame.transform.scale(image, (int(self.width * scale), int(self.height * scale)))
-        self.rect = self.image.get_rect()
-        self.rect.topleft = (x, y)
-        self.clicked = False
-
-    def draw(self, surface):
-        action = False
-
-        # get mouse position
-        pos = pygame.mouse.get_pos()
-
-        # check mouseover and clicked conditions
-        if self.rect.collidepoint(pos):
-            if pygame.mouse.get_pressed()[0] == 1 and self.clicked == False:
-                action = True
-                self.clicked = True
-
-        if pygame.mouse.get_pressed()[0] == 0:
-            self.clicked = False
-
-        # draw button
-        surface.blit(self.image, (self.rect.x, self.rect.y))
-
-        return action
 
 
 class Scene:
