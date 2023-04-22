@@ -30,8 +30,7 @@ class ResourcesTest(unittest.TestCase):
         self.assertTrue(gfx)
 
     def test_grenada_sfx_loadable(self):
-        sfx = resources.sfx('grenade.wav',0.5)
-        self.assertTrue(sfx)
+        resources.sfx_play('grenade.wav',0.5)
 
     def test_animation_loaded_twice(self):
         # arrange + act

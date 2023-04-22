@@ -2,7 +2,7 @@ import unittest
 
 import pygame
 
-from pyshooter.main import Background
+from pyshooter.level_scene import Background
 
 
 class BackgroundTest(unittest.TestCase):
